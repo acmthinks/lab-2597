@@ -1,8 +1,6 @@
-#variable "ibmcloud_api_key" {
-#  type        = string
-#  description = "IBM Cloud API key"
-#}
-
+###############################################################################
+## General variables
+###############################################################################
 variable "prefix" {
   type        = string
   default = "lab-2597"
@@ -32,10 +30,10 @@ variable "public_ssh_key" {
   description = "public key"
 }
 
+
 ###############################################################################
 ## PowerVS variables
 ###############################################################################
-
 variable "powervs_supported_zone" {
   type        = string
   description = "IBM Cloud availability zone within a region to provision the resources."
