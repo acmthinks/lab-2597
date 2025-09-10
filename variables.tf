@@ -1,11 +1,11 @@
-variable "ibmcloud_api_key" {
-  type        = string
-  description = "IBM Cloud API key"
-}
+#variable "ibmcloud_api_key" {
+#  type        = string
+#  description = "IBM Cloud API key"
+#}
 
 variable "prefix" {
   type        = string
-  default = "demo"
+  default = "lab-2597"
   description = "The string that needs to be attached to every resource created"
 }
 

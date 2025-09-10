@@ -161,12 +161,6 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  2   | inbound   | Allow     | ALL       | 10.50.0.0/25  | 10.50.0.128/25
 ##  (3) | inbound   | Allow     | ALL       | 10.60.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (4) | inbound   | Allow     | ALL       | 161.26.0.0/16 | 0.0.0.0/0 IaaS service endpoints (RHN, NTP, DNS, et al)
-##  (5) | inbound   | Allow     | TCP       | 166.9.228.45/32 6443 | 10.50.0.128/25  wpp1 collection endpoint
-##  (7) | inbound   | Allow     | TCP       | 166.9.229.45/32 6443 | 10.50.0.128/25  wpp2 collection endpoint
-##  (8) | inbound   | Allow     | TCP       | 166.9.230.45/32 6443 | 10.50.0.128/25  wpp3 collection endpoint
-##  (9) | inbound   | Allow     | TCP       | 166.9.14.170/32 6443 | 10.50.0.128/25  wpp1 collection endpoint (deprecated)
-##  (10)| inbound   | Allow     | TCP       | 166.9.48.41/32 6443  | 10.50.0.128/25  wpp2 collection endpoint (deprecated)
-##  (11)| inbound   | Allow     | TCP       | 166.9.17.11/32 6443  | 10.50.0.128/25  wpp3 collection endpoint (deprecated)
 ##  12  | inbound   | Deny      | ALL       | 0.0.0.0/0     | 10.50.0.128/25
 ##
 ##  1   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 192.168.0.0/16 Internet traffic through Client VPN Server
@@ -174,12 +168,6 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  3   | outbound  | Allow     | TCP       | 10.50.0.128/25 443 | 0.0.0.0/0
 ##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.60.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (5) | outbound  | Allow     | ALL       | 10.50.0.128/25      | 161.26.0.0/16 IaaS service endpoints (RHN, NTP, DNS, et al)
-##  (6) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.228.45/32 6443   wpp1 collection endpoint
-##  (7) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.229.45/32 6443   wpp2 collection endpoint
-##  (8) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.230.45/32 6443   wpp3 collection endpoint
-##  (9) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.14.170/32 6443   wpp1 collection endpoint (deprecated)
-##  (10)| outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.48.41/32 6443   wpp2 collection endpoint (deprecated)
-##  (11)| outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.17.11/32 6443   wpp3 collection endpoint (deprecated)
 ##  12  | outbound  | Deny      | ALL       | 10.50.0.128/25     | 0.0.0.0/0
 ###############################################################################
 resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
@@ -206,72 +194,6 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
     source      = var.iaas-service-endpoint-cidr
     destination = "0.0.0.0/0"
     direction   = "inbound"
-  }
-  rules {
-    name        = "inbound-wpp1-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-1
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp2-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-2
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp3-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-3
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp1-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-1-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp2-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-2-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp3-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-3-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
   }
   rules {
     name        = "inbound-deny-all"
@@ -311,72 +233,6 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
     source      = var.edge_vpc_bastion_cidr
     destination = var.iaas-service-endpoint-cidr
     direction   = "outbound"
-  }
-  rules {
-    name        = "outbound-wpp1-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-1
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp2-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-2
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp3-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-3
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp1-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-1-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp2-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-2-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp3-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-3-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
   }
   rules {
     name        = "outbound-deny-all"
@@ -547,147 +403,8 @@ resource "ibm_is_security_group_rule" "bastion_server_rule_outbound_iaas_endpoin
   remote = var.iaas-service-endpoint-cidr
 }
 
-###############################################################################
-## Create Security Group for IBM Cloud Security & Compliance Center - WPP
-## Name: scc-wpp-sg
-## Rules:
-##  Direction | Protocol  | Source          | Destination
-##  inbound   | TCP       | 166.9.228.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.229.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.230.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.14.170/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.48.41/32  | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.17.11/32  | 0.0.0.0/0 [Ports 6443-6443]
 
-##
-##  Direction | Protocol  | Source          | Destination
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.228.45/32 Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.229.45/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.230.45/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.14.170/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.48.41/32  [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.17.11/32  [Ports 6443-6443]
-###############################################################################
-resource "ibm_is_security_group" "scc_wcc_sg" {
-  name = "scc-wcc-sg"
-  vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_1" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-1
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_2" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-2
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_3" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-3
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_4" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-1-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_5" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-2-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_6" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-3-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_7" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-1
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_8" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-2
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_9" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-3
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_10" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-1-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_11" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-2-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_12" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-3-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-
-
-## Get Secrets Manager instance
-#data "ibm_resource_instance" "secrets_manager" {
-#  identifier = var.secrets_manager_instance_crn
-#}
-
+## Secrets Manager instance
 resource "ibm_resource_instance" "secrets_manager" {
   name = "${var.prefix}-secrets-manager"
   service = "secrets-manager"
@@ -796,7 +513,7 @@ resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   enable_infrastructure_nat = true
   auto_delete = false
   subnet = ibm_is_subnet.bastion_subnet.id
-  security_groups = [ibm_is_security_group.bastion_server_sg.id, ibm_is_security_group.scc_wcc_sg.id]
+  security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
 resource "ibm_is_instance" "bastion_server_vsi" {
@@ -820,7 +537,6 @@ resource "ibm_is_instance" "bastion_server_vsi" {
   zone = var.zone
   resource_group = data.ibm_resource_group.resource_group.id
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
-  tags = ["scc-wpp"]
 }
 
 #Create a public gateway, but do not attach by default
