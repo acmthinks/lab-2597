@@ -432,12 +432,12 @@ resource "ibm_sm_imported_certificate" "imported_vpn_certificate" {
   secret_group_id = ibm_sm_secret_group.vpn_server_secret_group.secret_group_id
   certificate = file("${var.vpn_certificate_file}")
   intermediate = file("${var.ca_certificate_file}")
-  private_key = file("${var.vpn_private_key_file}")
+  private_key = "${var.vpn_private_key}"
 }
 
 resource "ibm_sm_secret_group" "ssh_keys_secret_group" {
   instance_id   = ibm_resource_instance.secrets_manager.guid
-  region        = "us-south"
+  region        = var.region
   name          = "ssh-keys-secret-group"
   description = "ssh keys"
 }
@@ -467,8 +467,8 @@ resource "ibm_iam_authorization_policy" "client_vpn_to_secrets_manager_auth" {
 resource "ibm_is_vpn_server" "vpn_server" {
   certificate_crn = ibm_sm_imported_certificate.imported_vpn_certificate.crn
   client_authentication {
-    method    = "certificate"
-    client_ca_crn =  ibm_sm_imported_certificate.imported_vpn_certificate.crn
+    method    = "username"
+    identity_provider = "iam"
   }
   client_ip_pool         = var.edge_vpc_public_cidr
   client_idle_timeout    = 600

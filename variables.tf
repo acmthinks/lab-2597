@@ -51,36 +51,15 @@ variable "edge_vpc_public_cidr" {
   default = "192.168.0.0/16"
 }
 
-#variable "secrets_manager_instance_crn" {
-#  type        = string
-#  description = "CRN of existing Secrets Manager instance"
-#}
-
-#variable "vpn_certificate_crn" {
-#  type        = string
-#  description = "CRN of existing VPN certificate instance from Secrets Manager"
-#}
-
-variable "vpn_certificate" {
-  type = string
-  description = "VPN certificate, value found in vpnserver.pem "
-}
-
-variable "ca_certificate" {
-  type = string
-  description = "Intermediate CA certificate, value found in ca.pem"
-}
-
 variable "vpn_certificate_file" {
   type = string
   description = "VPN certificate file (i.e. vpnserver.pem)"
-  default = "certs/vpnserver.pem"
+  default = "certs/lab2597.vpn-server.ibm.com.pem"
 }
 
-variable "vpn_private_key_file" {
+variable "vpn_private_key" {
   type = string
-  description = "private key file (i.e. vpnserver.key)"
-  default = "certs/vpnserver.key"
+  description = "contents of private key (i.e. lab-2596.vpn-server.ibm.com.key)"
 }
 
 variable "ca_certificate_file" {
@@ -102,41 +81,4 @@ variable "iaas-service-endpoint-cidr" {
   type = string
   description = "Infrastructure services are available by using certain DNS names from the adn.networklayer.com domain, and they resolve to 161.26.0.0/16 addresses. Services that you can reach include: DNS resolvers, Ubuntu and Debian APT mirrors, NTP, IBM COS."
   default = "161.26.0.0/16"
-}
-variable "wpp-collection-endpoint-cidr-1" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #1"
-  default = "166.9.228.45/32"
-}
-variable "wpp-collection-endpoint-cidr-2" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #2"
-  default = "166.9.229.45/32"
-}
-variable "wpp-collection-endpoint-cidr-3" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #3"
-  default = "166.9.230.45/32"
-}
-
-variable "wpp-collection-endpoint-cidr-1-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #1 (deprecated)"
-  default = "166.9.14.170/32"
-}
-variable "wpp-collection-endpoint-cidr-2-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #2 (deprecated)"
-  default = "166.9.48.41/32"
-}
-variable "wpp-collection-endpoint-cidr-3-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #3 (deprecated)"
-  default = "166.9.17.11/32"
-}
-
-variable "wpp-collection-endpoint-port" {
-  type        = number
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint port"
-  default = 6443
 }
