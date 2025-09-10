@@ -632,3 +632,30 @@ resource "ibm_is_public_gateway" "public_gateway" {
 #  subnet = ibm_is_subnet.bastion_subnet.id
 #  public_gateway = ibm_is_public_gateway.public_gateway.id
 #}
+
+###############################################################################
+## Create a Transit Gateway
+##
+## This creates a TGW to connect VPC to PowerVS workspace
+###############################################################################
+resource "ibm_tg_gateway" "vpc_powervs_tg_gw"{
+  name = "transit-gateway"
+  location = var.region
+  global = false
+  resource_group = data.ibm_resource_group.resource_group.id
+}
+
+#create Transit Gateway connections to the VPC and to the PowerVS workspace
+resource "ibm_tg_connection" "vpc_connection" {
+  gateway = ibm_tg_gateway.vpc_powervs_tg_gw.id
+  network_type = "vpc"
+  name = "vpc-connection"
+  network_id = ibm_is_vpc.edge_vpc.resource_crn
+}
+
+resource "ibm_tg_connection" "powervs_connection" {
+  gateway = ibm_tg_gateway.vpc_powervs_tg_gw.id
+  network_type = "power_virtual_server"
+  name = "powervs-connection"
+  network_id = ibm_pi_workspace.powervs_workspace.crn
+}
