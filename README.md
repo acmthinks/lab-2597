@@ -6,3 +6,5 @@ In this part, Cloud Object Storage (COS) will be provisioned with a bucket and a
 2. Run Schematics workspace
 3. Examine the Schematics Workspace
 4. Validate the provisioned environment
+
+![image](architecture.png "Part 3 architecture")
