@@ -95,7 +95,7 @@ variable "edge_vpc_public_cidr" {
 variable "vpn_certificate_file" {
   type = string
   description = "VPN certificate file (i.e. vpnserver.pem)"
-  default = "./certs/lab2597.vpn-server.ibm.com.pem"
+  default = "certs/lab-2597.vpn-server.ibm.com.pem"
 }
 
 variable "vpn_private_key" {
@@ -107,7 +107,7 @@ variable "vpn_private_key" {
 variable "ca_certificate_file" {
   type = string
   description = "Intermediate CA certificate file name (ca.pem)"
-  default = "./certs/ca.pem"
+  default = "certs/ca.pem"
 }
 
 ## Reserved Endpoints
