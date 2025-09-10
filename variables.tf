@@ -5,13 +5,13 @@ variable "ibmcloud_api_key" {
 
 variable "prefix" {
   type        = string
-  default = "demo"
+  default = "lab-2597"
   description = "The string that needs to be attached to every resource created"
 }
 
 variable "resource_group" {
   type        = string
-  default     = "demo"
+  default     = "lab-2597"
   description = "Name of the resource group"
 }
 
