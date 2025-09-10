@@ -6,3 +6,5 @@ Terraform is a declarative framework for provisioning. In this part, you will si
 2. Run Schematics workspace
 3. Examine the Schematics Workspace
 4. Validate the provisioned environment
+
+![image](architecture.png "Part 2 architecture")
