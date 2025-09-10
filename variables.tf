@@ -1,8 +1,6 @@
-#variable "ibmcloud_api_key" {
-#  type        = string
-#  description = "IBM Cloud API key"
-#}
-
+###############################################################################
+## General variables
+###############################################################################
 variable "prefix" {
   type        = string
   default = "lab-2597"
@@ -11,7 +9,7 @@ variable "prefix" {
 
 variable "resource_group" {
   type        = string
-  default     = "demo"
+  default     = "lab-2597"
   description = "Name of the resource group"
 }
 
@@ -27,6 +25,48 @@ variable "zone" {
   default     = "us-south-1"
 }
 
+variable "public_ssh_key" {
+  type = string
+  description = "public key"
+}
+
+
+###############################################################################
+## PowerVS variables (Part 1)
+###############################################################################
+variable "powervs_supported_zone" {
+  type        = string
+  description = "IBM Cloud availability zone within a region to provision the resources."
+  default     = "dal10"
+}
+
+variable "powervs_subnet_cidr" {
+  type        = string
+  description = "IP Address CIDR for PowerVS workspace"
+}
+
+variable "powervs_instance_cores" {
+  type        = string
+  description =  "number of physical cores (can be fractional to .25)"
+  default = ".25"
+}
+
+variable "powervs_instance_memory" {
+  type        = number
+  description =  "amount of memory (GiB)"
+  default = 2
+}
+
+variable "powervs_system_type" {
+  type = string
+  description = "Power System type: 922, 980, 1080. Check data centers for availability. Defaults to Power9 scale-out (922)"
+  default = "s922"
+}
+
+
+###############################################################################
+## VPC variables  (Part 2)
+###############################################################################
 variable "edge_vpc_address_prefix" {
   type        = string
   description = "IP Address prefix (CIDR)"
@@ -60,6 +100,7 @@ variable "vpn_certificate_file" {
 variable "vpn_private_key" {
   type = string
   description = "contents of private key (i.e. lab-2596.vpn-server.ibm.com.key)"
+  sensitive = true
 }
 
 variable "ca_certificate_file" {
@@ -68,13 +109,7 @@ variable "ca_certificate_file" {
   default = "certs/ca.pem"
 }
 
-variable "public_ssh_key" {
-  type = string
-  description = "public key"
-}
-
 ## Reserved Endpoints
-
 #Must also leave open: port 53/UDP/DNS, port 80/TCP/HTTP, port 443/TCP/HTTPS, port 8443/TCP/HTTPS (for linux) for IaaS service endpoints to work
 #more info at https://cloud.ibm.com/docs/vpc?topic=vpc-service-endpoints-for-vpc
 variable "iaas-service-endpoint-cidr" {
