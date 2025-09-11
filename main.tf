@@ -239,14 +239,14 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  #   | Direction | Action    | Protocol  | Source        | Destination
 ##  1   | inbound   | Allow     | ALL       | 192.168.0.0/16| 10.50.0.128/25 Internet traffic through Client VPN Server
 ##  2   | inbound   | Allow     | ALL       | 10.50.0.0/25  | 10.50.0.128/25
-##  (3) | inbound   | Allow     | ALL       | 10.60.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (3) | inbound   | Allow     | ALL       | 10.80.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (4) | inbound   | Allow     | ALL       | 161.26.0.0/16 | 0.0.0.0/0 IaaS service endpoints (RHN, NTP, DNS, et al)
 ##  12  | inbound   | Deny      | ALL       | 0.0.0.0/0     | 10.50.0.128/25
 ##
 ##  1   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 192.168.0.0/16 Internet traffic through Client VPN Server
 ##  2   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.50.0.0/25
 ##  3   | outbound  | Allow     | TCP       | 10.50.0.128/25 443 | 0.0.0.0/0
-##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.60.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.80.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (5) | outbound  | Allow     | ALL       | 10.50.0.128/25      | 161.26.0.0/16 IaaS service endpoints (RHN, NTP, DNS, et al)
 ##  12  | outbound  | Deny      | ALL       | 10.50.0.128/25     | 0.0.0.0/0
 ###############################################################################
@@ -266,6 +266,14 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
     action      = "allow"
     source      = var.edge_vpc_vpn_cidr
     destination = var.edge_vpc_bastion_cidr
+    direction   = "inbound"
+  }
+  #add rule to allow traffic from PowerVS workspace
+    rules {
+    name        = "inbound-powervs-workspace"
+    action      = "allow"
+    source      = var.powervs_subnet_cidr
+    destination = "0.0.0.0/0"
     direction   = "inbound"
   }
   rules {
@@ -306,6 +314,14 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
       source_port_min = 443
       source_port_max = 443
     }
+  }
+  #add rule to allow traffic from PowerVS workspace
+  rules {
+    name        = "outbound-powervs-workspace"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination =  var.powervs_subnet_cidr
+    direction   = "outbound"
   }
   rules {
     name        = "outbound-iaas-service-endpoints"
