@@ -762,8 +762,12 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   depends_on = [ ibm_resource_instance.cos ]
   name = "vpe-gateway"
   target {
-    crn           = ibm_resource_instance.cos.crn
+    crn           = "crn:v1:bluemix:public:cloud-object-storage:global:::endpoint:s3.direct.${var.region}.cloud-object-storage.appdomain.cloud"
     resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "vpe-gateway-reserved-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
   resource_group = ibm_resource_group.resource_group.id
