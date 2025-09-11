@@ -10,12 +10,93 @@
 ###############################################################################
 ## Create a Resource Group
 ##
-## Gets reference to an existing resource group, specified in terraform.tfvars
+## Creates a resource group
 ###############################################################################
-data "ibm_resource_group" "resource_group" {
+resource "ibm_resource_group" "resource_group" {
    name   = var.resource_group
 }
 
+
+###############################################################################
+###############################################################################
+##
+##  PART 1
+##
+###############################################################################
+###############################################################################
+
+
+###############################################################################
+## Create a Power VS Workspace
+###############################################################################
+resource ibm_pi_workspace "powervs_workspace" {
+  pi_name          = join("-", [var.prefix, "power-workspace"])
+
+  pi_datacenter    = var.region
+  pi_resource_group_id  = ibm_resource_group.resource_group.id
+}
+
+# Create SSH Key object in PowerVS workspace, based on the ssh public key
+# payload from Secrets Manager
+resource "ibm_pi_key" "power_vsi_ssh_key" {
+  pi_key_name       = join("-", [var.prefix, "ssh-key"])
+  pi_ssh_key = var.public_ssh_key
+  pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+  pi_visibility = "workspace"
+}
+
+###############################################################################
+## Create a subnet in the PowerVS workspace
+##
+## This creates a PRIVATE vlan (or subnet) in the PowerVS workspace
+###############################################################################
+resource "ibm_pi_network" "workload-subnet" {
+  count                = 1
+  pi_network_name      = "workload-subnet"
+  pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+  pi_network_type      = "vlan"
+  pi_cidr              = var.powervs_subnet_cidr
+  #pi_advertise         = "enable"
+}
+
+
+###############################################################################
+## Create a PowerVS instance
+##
+## This creates a PowerVS instance (or a vm) using the ssh key and subnet above
+###############################################################################
+resource "ibm_pi_instance" "powervs-instance" {
+    pi_memory             = var.powervs_instance_memory
+    pi_processors         = var.powervs_instance_cores
+    pi_instance_name      = join("-", [var.prefix, "power-vsi"])
+    pi_proc_type          = "shared"
+    #pi_image_id           = data.ibm_pi_image.aix72_5_10_image.id
+    pi_image_id = "52f2891b-6e4b-4765-bc0e-43cdc036305a"
+    pi_key_pair_name      = ibm_pi_key.power_vsi_ssh_key.pi_key_name
+    pi_sys_type           = var.powervs_system_type
+    pi_cloud_instance_id  = ibm_pi_workspace.powervs_workspace.id
+    pi_pin_policy         = "none"
+    pi_health_status      = "WARNING"
+    pi_network {
+      network_id = ibm_pi_network.workload-subnet[0].network_id
+    }
+}
+
+#data "ibm_pi_image" "aix72_5_10_image" {
+#    pi_image_name = "52f2891b-6e4b-4765-bc0e-43cdc036305a"
+#    #pi_image_name = "7200-05-10"
+#    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+#}
+
+
+
+###############################################################################
+###############################################################################
+##
+##  PART 2
+##
+###############################################################################
+###############################################################################
 
 ###############################################################################
 ## Create a VPC on IBM Cloud
@@ -25,7 +106,7 @@ data "ibm_resource_group" "resource_group" {
 ###############################################################################
 resource "ibm_is_vpc" "edge_vpc" {
   name = join("-", [var.prefix, "edge-vpc"])
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   address_prefix_management = "manual"
   default_routing_table_name = join("-", [var.prefix, "edge-vpc", "rt", "default"])
   default_security_group_name = join("-", [var.prefix, "edge-vpc", "sg", "default"])
@@ -55,7 +136,7 @@ resource "ibm_is_subnet" "vpn_server_subnet" {
   name            = "vpn-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -71,7 +152,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
   name            = "bastion-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -159,27 +240,15 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  #   | Direction | Action    | Protocol  | Source        | Destination
 ##  1   | inbound   | Allow     | ALL       | 192.168.0.0/16| 10.50.0.128/25 Internet traffic through Client VPN Server
 ##  2   | inbound   | Allow     | ALL       | 10.50.0.0/25  | 10.50.0.128/25
-##  (3) | inbound   | Allow     | ALL       | 10.60.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (3) | inbound   | Allow     | ALL       | 10.80.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (4) | inbound   | Allow     | ALL       | 161.26.0.0/16 | 0.0.0.0/0 IaaS service endpoints (RHN, NTP, DNS, et al)
-##  (5) | inbound   | Allow     | TCP       | 166.9.228.45/32 6443 | 10.50.0.128/25  wpp1 collection endpoint
-##  (7) | inbound   | Allow     | TCP       | 166.9.229.45/32 6443 | 10.50.0.128/25  wpp2 collection endpoint
-##  (8) | inbound   | Allow     | TCP       | 166.9.230.45/32 6443 | 10.50.0.128/25  wpp3 collection endpoint
-##  (9) | inbound   | Allow     | TCP       | 166.9.14.170/32 6443 | 10.50.0.128/25  wpp1 collection endpoint (deprecated)
-##  (10)| inbound   | Allow     | TCP       | 166.9.48.41/32 6443  | 10.50.0.128/25  wpp2 collection endpoint (deprecated)
-##  (11)| inbound   | Allow     | TCP       | 166.9.17.11/32 6443  | 10.50.0.128/25  wpp3 collection endpoint (deprecated)
 ##  12  | inbound   | Deny      | ALL       | 0.0.0.0/0     | 10.50.0.128/25
 ##
 ##  1   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 192.168.0.0/16 Internet traffic through Client VPN Server
 ##  2   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.50.0.0/25
 ##  3   | outbound  | Allow     | TCP       | 10.50.0.128/25 443 | 0.0.0.0/0
-##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.60.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.80.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (5) | outbound  | Allow     | ALL       | 10.50.0.128/25      | 161.26.0.0/16 IaaS service endpoints (RHN, NTP, DNS, et al)
-##  (6) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.228.45/32 6443   wpp1 collection endpoint
-##  (7) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.229.45/32 6443   wpp2 collection endpoint
-##  (8) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.230.45/32 6443   wpp3 collection endpoint
-##  (9) | outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.14.170/32 6443   wpp1 collection endpoint (deprecated)
-##  (10)| outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.48.41/32 6443   wpp2 collection endpoint (deprecated)
-##  (11)| outbound  | Allow     | TCP       | 10.50.0.128/25      | 166.9.17.11/32 6443   wpp3 collection endpoint (deprecated)
 ##  12  | outbound  | Deny      | ALL       | 10.50.0.128/25     | 0.0.0.0/0
 ###############################################################################
 resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
@@ -200,78 +269,20 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
     destination = var.edge_vpc_bastion_cidr
     direction   = "inbound"
   }
+  #add rule to allow traffic from PowerVS workspace
+    rules {
+    name        = "inbound-powervs-workspace"
+    action      = "allow"
+    source      = var.powervs_subnet_cidr
+    destination = "0.0.0.0/0"
+    direction   = "inbound"
+  }
   rules {
     name        = "inbound-iaas-service-endpoints"
     action      = "allow"
     source      = var.iaas-service-endpoint-cidr
     destination = "0.0.0.0/0"
     direction   = "inbound"
-  }
-  rules {
-    name        = "inbound-wpp1-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-1
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp2-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-2
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp3-agent"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-3
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp1-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-1-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp2-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-2-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "inbound-wpp3-agent-deprecated"
-    action      = "allow"
-    source      = var.wpp-collection-endpoint-cidr-3-deprecated
-    destination = var.edge_vpc_bastion_cidr
-    direction   = "inbound"
-    tcp {
-      source_port_min = var.wpp-collection-endpoint-port
-      source_port_max = var.wpp-collection-endpoint-port
-    }
   }
   rules {
     name        = "inbound-deny-all"
@@ -305,78 +316,20 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
       source_port_max = 443
     }
   }
+  #add rule to allow traffic from PowerVS workspace
+  rules {
+    name        = "outbound-powervs-workspace"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination =  var.powervs_subnet_cidr
+    direction   = "outbound"
+  }
   rules {
     name        = "outbound-iaas-service-endpoints"
     action      = "allow"
     source      = var.edge_vpc_bastion_cidr
     destination = var.iaas-service-endpoint-cidr
     direction   = "outbound"
-  }
-  rules {
-    name        = "outbound-wpp1-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-1
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp2-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-2
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp3-agent"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-3
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp1-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-1-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp2-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-2-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
-  }
-  rules {
-    name        = "outbound-wpp3-agent-deprecated"
-    action      = "allow"
-    source      = var.edge_vpc_bastion_cidr
-    destination = var.wpp-collection-endpoint-cidr-3-deprecated
-    direction   = "outbound"
-    tcp {
-      port_min = var.wpp-collection-endpoint-port
-      port_max = var.wpp-collection-endpoint-port
-    }
   }
   rules {
     name        = "outbound-deny-all"
@@ -410,7 +363,7 @@ resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attac
 resource "ibm_is_security_group" "vpn_server_sg" {
   name = "vpn-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "vpn_server_rule_1" {
@@ -456,7 +409,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  inbound   | ICMP      | 10.10.10.0/24   | 0.0.0.0/0 [Type:8, Code:Any]
 ##  inbound   | ALL       | 10.50.0.0/25    | 0.0.0.0/0
 ##  inbound   | ALL       | 161.26.0.0/16    | 0.0.0.0/0
-##  (inbound) | ALL       | 10.60.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
+##  (inbound) | ALL       | 10.80.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
 
 ##
 ##  Direction | Protocol  | Source          | Destination
@@ -465,12 +418,12 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  egress    | ICMP      | 0.0.0.0/0       | 10.50.0.0/24 [Type:8, Code:Any]
 ##  egress    | ALL       | 0.0.0.0/0       | 10.50.0.0/25
 ##  egress    | ALL       | 0.0.0.0/0       | 161.26.0.0/16
-##  (egress)  | ALL       | 0.0.0.0/0       | 10.60.0.128/25  for connecting to another VPC or PowerVS workspace
+##  (egress)  | ALL       | 0.0.0.0/0       | 10.80.0.128/25  for connecting to another VPC or PowerVS workspace
 ###############################################################################
 resource "ibm_is_security_group" "bastion_server_sg" {
   name = "bastion-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "bastion_server_rule_1" {
@@ -509,6 +462,12 @@ resource "ibm_is_security_group_rule" "bastion_server_rule_inbound_iaas_endpoint
   direction = "inbound"
   remote = var.iaas-service-endpoint-cidr
 }
+# add security group ingress for PowerVS traffic
+resource "ibm_is_security_group_rule" "bastion_server_rule_inbound_powervs" {
+  group = ibm_is_security_group.bastion_server_sg.id
+  direction = "inbound"
+  remote = var.powervs_subnet_cidr
+}
 
 resource "ibm_is_security_group_rule" "bastion_server_rule_5" {
   group = ibm_is_security_group.bastion_server_sg.id
@@ -546,148 +505,14 @@ resource "ibm_is_security_group_rule" "bastion_server_rule_outbound_iaas_endpoin
   direction = "outbound"
   remote = var.iaas-service-endpoint-cidr
 }
-
-###############################################################################
-## Create Security Group for IBM Cloud Security & Compliance Center - WPP
-## Name: scc-wpp-sg
-## Rules:
-##  Direction | Protocol  | Source          | Destination
-##  inbound   | TCP       | 166.9.228.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.229.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.230.45/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.14.170/32 | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.48.41/32  | 0.0.0.0/0 [Ports 6443-6443]
-##  inbound   | TCP       | 166.9.17.11/32  | 0.0.0.0/0 [Ports 6443-6443]
-
-##
-##  Direction | Protocol  | Source          | Destination
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.228.45/32 Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.229.45/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.230.45/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.14.170/32 [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.48.41/32  [Ports 6443-6443]
-##  outbound  | TCP       | 0.0.0.0/0       | 166.9.17.11/32  [Ports 6443-6443]
-###############################################################################
-resource "ibm_is_security_group" "scc_wcc_sg" {
-  name = "scc-wcc-sg"
-  vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_1" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-1
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_2" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-2
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_3" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-3
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_4" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-1-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_5" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-2-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_6" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "inbound"
-  remote = var.wpp-collection-endpoint-cidr-3-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_7" {
-  group = ibm_is_security_group.scc_wcc_sg.id
+# add security group egress rule to allow trafific outbound to powervs
+resource "ibm_is_security_group_rule" "bastion_server_rule_outbound_powervs" {
+  group = ibm_is_security_group.bastion_server_sg.id
   direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-1
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_8" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-2
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_9" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-3
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_10" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-1-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_11" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-2-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
-}
-resource "ibm_is_security_group_rule" "scc_wpp_rule_12" {
-  group = ibm_is_security_group.scc_wcc_sg.id
-  direction = "outbound"
-  remote = var.wpp-collection-endpoint-cidr-3-deprecated
-  tcp {
-    port_min = 6443
-    port_max = 6443
-  }
+  remote = var.powervs_subnet_cidr
 }
 
-
-## Get Secrets Manager instance
-#data "ibm_resource_instance" "secrets_manager" {
-#  identifier = var.secrets_manager_instance_crn
-#}
-
+## Secrets Manager instance
 resource "ibm_resource_instance" "secrets_manager" {
   name = "${var.prefix}-secrets-manager"
   service = "secrets-manager"
@@ -715,12 +540,12 @@ resource "ibm_sm_imported_certificate" "imported_vpn_certificate" {
   secret_group_id = ibm_sm_secret_group.vpn_server_secret_group.secret_group_id
   certificate = file("${var.vpn_certificate_file}")
   intermediate = file("${var.ca_certificate_file}")
-  private_key = file("${var.vpn_private_key_file}")
+  private_key = "${var.vpn_private_key}"
 }
 
 resource "ibm_sm_secret_group" "ssh_keys_secret_group" {
   instance_id   = ibm_resource_instance.secrets_manager.guid
-  region        = "us-south"
+  region        = var.region
   name          = "ssh-keys-secret-group"
   description = "ssh keys"
 }
@@ -729,7 +554,7 @@ resource "ibm_sm_secret_group" "ssh_keys_secret_group" {
 resource "ibm_sm_arbitrary_secret" "ssh_key_secret" {
   instance_id   = ibm_resource_instance.secrets_manager.guid
   region        = var.region
-  name          = "andrea-ssh-public-key"
+  name          = join("-", [var.prefix, "ssh-key"])
   secret_group_id = ibm_sm_secret_group.ssh_keys_secret_group.secret_group_id
   payload       = "${var.public_ssh_key}"
 }
@@ -750,8 +575,8 @@ resource "ibm_iam_authorization_policy" "client_vpn_to_secrets_manager_auth" {
 resource "ibm_is_vpn_server" "vpn_server" {
   certificate_crn = ibm_sm_imported_certificate.imported_vpn_certificate.crn
   client_authentication {
-    method    = "certificate"
-    client_ca_crn =  ibm_sm_imported_certificate.imported_vpn_certificate.crn
+    method    = "username"
+    identity_provider = "iam"
   }
   client_ip_pool         = var.edge_vpc_public_cidr
   client_idle_timeout    = 600
@@ -760,7 +585,7 @@ resource "ibm_is_vpn_server" "vpn_server" {
   port                   = 443
   protocol               = "udp"
   subnets                = [ibm_is_subnet.vpn_server_subnet.id]
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.vpn_server_sg.id]
 }
 
@@ -796,7 +621,7 @@ resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   enable_infrastructure_nat = true
   auto_delete = false
   subnet = ibm_is_subnet.bastion_subnet.id
-  security_groups = [ibm_is_security_group.bastion_server_sg.id, ibm_is_security_group.scc_wcc_sg.id]
+  security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
 resource "ibm_is_instance" "bastion_server_vsi" {
@@ -818,9 +643,8 @@ resource "ibm_is_instance" "bastion_server_vsi" {
 
   vpc  = ibm_is_vpc.edge_vpc.id
   zone = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
-  tags = ["scc-wpp"]
 }
 
 #Create a public gateway, but do not attach by default
@@ -829,10 +653,90 @@ resource "ibm_is_public_gateway" "public_gateway" {
   name = "public-gateway"
   vpc = ibm_is_vpc.edge_vpc.id
   zone = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 #resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
 #  subnet = ibm_is_subnet.bastion_subnet.id
 #  public_gateway = ibm_is_public_gateway.public_gateway.id
+#}
+
+###############################################################################
+## Create a Transit Gateway
+##
+## This creates a TGW to connect VPC to PowerVS workspace
+###############################################################################
+resource "ibm_tg_gateway" "vpc_powervs_tg_gw"{
+  name = "transit-gateway"
+  location = var.region
+  global = false
+  resource_group = ibm_resource_group.resource_group.id
+}
+
+#create Transit Gateway connections to the VPC and to the PowerVS workspace
+resource "ibm_tg_connection" "vpc_connection" {
+  gateway = ibm_tg_gateway.vpc_powervs_tg_gw.id
+  network_type = "vpc"
+  name = "vpc-connection"
+  network_id = ibm_is_vpc.edge_vpc.resource_crn
+}
+
+resource "ibm_tg_connection" "powervs_connection" {
+  gateway = ibm_tg_gateway.vpc_powervs_tg_gw.id
+  network_type = "power_virtual_server"
+  name = "powervs-connection"
+  network_id = ibm_pi_workspace.powervs_workspace.crn
+}
+
+
+###############################################################################
+###############################################################################
+##
+##  PART 3
+##
+###############################################################################
+###############################################################################
+
+###############################################################################
+## Create Cloud Object Storage (and bucket)
+##
+###############################################################################
+#resource "ibm_resource_instance" "cos" {
+#  name              = "cos"
+#  resource_group_id = ibm_resource_group.resource_group.id
+#  service           = "cloud-object-storage"
+#  plan              = "lite"
+#  location          = var.region
+#}
+
+#resource "ibm_cos_bucket" "cos_bucket" {
+#  bucket_name          = "lil-bucket"
+#  resource_instance_id = ibm_resource_instance.cos.id
+#  region_location = var.region
+#  storage_class        = "smart"
+#}
+
+#resource "ibm_cos_bucket_object" "plaintext" {
+#  bucket_crn      = ibm_cos_bucket.cos_bucket.crn
+#  bucket_location = ibm_cos_bucket.cos_bucket.region_location
+#  content         = "IBM is a hybrid cloud and AI company."
+#  key             = "plaintext.txt"
+#}
+
+###############################################################################
+## Create a Virtual Private Endpoint Gateway
+##
+## This creates a VPE GW to connect VPC to COS
+## https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-vpes
+###############################################################################
+
+#resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
+#  name = "vpe-gateway"
+#  target {
+#    name          = "cloud-object-storage"
+#    resource_type = "provider_cloud_service"
+#  }
+#  vpc            = ibm_is_vpc.edge_vpc.id
+#  resource_group = ibm_resource_group.resource_group.id
+#  #security_groups = [ibm_is_security_group.example.id]
 #}

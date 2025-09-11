@@ -1,17 +1,15 @@
-variable "ibmcloud_api_key" {
-  type        = string
-  description = "IBM Cloud API key"
-}
-
+###############################################################################
+## General variables
+###############################################################################
 variable "prefix" {
   type        = string
-  default = "demo"
+  default = "lab-2597"
   description = "The string that needs to be attached to every resource created"
 }
 
 variable "resource_group" {
   type        = string
-  default     = "demo"
+  default     = "lab-2597"
   description = "Name of the resource group"
 }
 
@@ -27,6 +25,50 @@ variable "zone" {
   default     = "us-south-1"
 }
 
+variable "public_ssh_key" {
+  type = string
+  description = "public key"
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC9WtH8MgfX434Pxt8jBDR8ILUWLeyIR8ajSuZdr7wVq4vpj7sal6M1Bri8n/jCBIO3LsllkjuRzf0X3xAH6S5BNpoalaH5yjZMXV8ieonslhpqcKzj2+vWcteuKIGgGOGit3qrdEwXQNJRk5w8TxEVIBs7YfzomoaYBMzx+10pFZ6VvbP8B+Vf+Xld4wGFKDST+ou5M4cHn93p2Jk4Gz4djumsJMPp9cIsC2aub8h8KC4/pgG/guQI99aUPqrA/pmoCERZx80BoN0TNBO7VE5XNE+QTQ80JMPC4qucGffGgK8Q/6oGWyho5w9Ujxky0SF6dnZUhcCACFeItpQJiebqhCdb75y0KaL7tkIBn/aaHyeLf2PpOu7aHchvi78azdNcGmIolH2JnXAnZ4mWeuX1CGtsDqJGkbHGEvADno/u1zyM2ZuUCnSzMzlkwWoSvtgPbkD9YxxzsE4/1yVz7w+QGUxbet5CQN4rGYS3yEavyF0o2qdkBTTXYpE450I+Xos="
+}
+
+
+###############################################################################
+## PowerVS variables (Part 1)
+###############################################################################
+variable "powervs_supported_zone" {
+  type        = string
+  description = "IBM Cloud availability zone within a region to provision the resources."
+  default     = "dal10"
+}
+
+variable "powervs_subnet_cidr" {
+  type        = string
+  description = "IP Address CIDR for PowerVS workspace"
+  default = "10.80.0.0/24"
+}
+
+variable "powervs_instance_cores" {
+  type        = string
+  description =  "number of physical cores (can be fractional to .25)"
+  default = ".25"
+}
+
+variable "powervs_instance_memory" {
+  type        = number
+  description =  "amount of memory (GiB)"
+  default = 2
+}
+
+variable "powervs_system_type" {
+  type = string
+  description = "Power System type: 922, 980, 1080. Check data centers for availability. Defaults to Power9 scale-out (922)"
+  default = "s922"
+}
+
+
+###############################################################################
+## VPC variables  (Part 2)
+###############################################################################
 variable "edge_vpc_address_prefix" {
   type        = string
   description = "IP Address prefix (CIDR)"
@@ -51,36 +93,16 @@ variable "edge_vpc_public_cidr" {
   default = "192.168.0.0/16"
 }
 
-#variable "secrets_manager_instance_crn" {
-#  type        = string
-#  description = "CRN of existing Secrets Manager instance"
-#}
-
-#variable "vpn_certificate_crn" {
-#  type        = string
-#  description = "CRN of existing VPN certificate instance from Secrets Manager"
-#}
-
-variable "vpn_certificate" {
-  type = string
-  description = "VPN certificate, value found in vpnserver.pem "
-}
-
-variable "ca_certificate" {
-  type = string
-  description = "Intermediate CA certificate, value found in ca.pem"
-}
-
 variable "vpn_certificate_file" {
   type = string
   description = "VPN certificate file (i.e. vpnserver.pem)"
-  default = "certs/vpnserver.pem"
+  default = "certs/lab-2597.vpn-server.ibm.com.pem"
 }
 
-variable "vpn_private_key_file" {
+variable "vpn_private_key" {
   type = string
-  description = "private key file (i.e. vpnserver.key)"
-  default = "certs/vpnserver.key"
+  description = "contents of private key (i.e. lab-2596.vpn-server.ibm.com.key)"
+  sensitive = true
 }
 
 variable "ca_certificate_file" {
@@ -89,54 +111,11 @@ variable "ca_certificate_file" {
   default = "certs/ca.pem"
 }
 
-variable "public_ssh_key" {
-  type = string
-  description = "public key"
-}
-
 ## Reserved Endpoints
-
 #Must also leave open: port 53/UDP/DNS, port 80/TCP/HTTP, port 443/TCP/HTTPS, port 8443/TCP/HTTPS (for linux) for IaaS service endpoints to work
 #more info at https://cloud.ibm.com/docs/vpc?topic=vpc-service-endpoints-for-vpc
 variable "iaas-service-endpoint-cidr" {
   type = string
   description = "Infrastructure services are available by using certain DNS names from the adn.networklayer.com domain, and they resolve to 161.26.0.0/16 addresses. Services that you can reach include: DNS resolvers, Ubuntu and Debian APT mirrors, NTP, IBM COS."
   default = "161.26.0.0/16"
-}
-variable "wpp-collection-endpoint-cidr-1" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #1"
-  default = "166.9.228.45/32"
-}
-variable "wpp-collection-endpoint-cidr-2" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #2"
-  default = "166.9.229.45/32"
-}
-variable "wpp-collection-endpoint-cidr-3" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #3"
-  default = "166.9.230.45/32"
-}
-
-variable "wpp-collection-endpoint-cidr-1-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #1 (deprecated)"
-  default = "166.9.14.170/32"
-}
-variable "wpp-collection-endpoint-cidr-2-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #2 (deprecated)"
-  default = "166.9.48.41/32"
-}
-variable "wpp-collection-endpoint-cidr-3-deprecated" {
-  type        = string
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint #3 (deprecated)"
-  default = "166.9.17.11/32"
-}
-
-variable "wpp-collection-endpoint-port" {
-  type        = number
-  description = "IBM Cloud Security and Compliance Center - Workload Protection collection endpoint port"
-  default = 6443
 }
