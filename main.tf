@@ -171,7 +171,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
 resource "ibm_is_network_acl" "vpn_server_subnet_acl" {
   name = "vpn-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-allow-same-subnet-ssh"
     action      = "allow"
@@ -254,7 +254,7 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
   name = "bastion-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-public-allow-all"
     action      = "allow"
@@ -518,7 +518,7 @@ resource "ibm_resource_instance" "secrets_manager" {
   service = "secrets-manager"
   plan = "standard"
   location = "us-south"
-  resource_group_id = data.ibm_resource_group.resource_group.id
+  resource_group_id = ibm_resource_group.resource_group.id
 
   parameters = {
     "allowed_network" = "public-and-private"
@@ -616,7 +616,7 @@ data "ibm_is_image" "debian" {
 
 resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   name = "bastion-server-vni"
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   allow_ip_spoofing = false
   enable_infrastructure_nat = true
   auto_delete = false
