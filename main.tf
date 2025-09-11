@@ -408,7 +408,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  inbound   | ICMP      | 10.10.10.0/24   | 0.0.0.0/0 [Type:8, Code:Any]
 ##  inbound   | ALL       | 10.50.0.0/25    | 0.0.0.0/0
 ##  inbound   | ALL       | 161.26.0.0/16    | 0.0.0.0/0
-##  (inbound) | ALL       | 10.60.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
+##  (inbound) | ALL       | 10.80.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
 
 ##
 ##  Direction | Protocol  | Source          | Destination
@@ -417,7 +417,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  egress    | ICMP      | 0.0.0.0/0       | 10.50.0.0/24 [Type:8, Code:Any]
 ##  egress    | ALL       | 0.0.0.0/0       | 10.50.0.0/25
 ##  egress    | ALL       | 0.0.0.0/0       | 161.26.0.0/16
-##  (egress)  | ALL       | 0.0.0.0/0       | 10.60.0.128/25  for connecting to another VPC or PowerVS workspace
+##  (egress)  | ALL       | 0.0.0.0/0       | 10.80.0.128/25  for connecting to another VPC or PowerVS workspace
 ###############################################################################
 resource "ibm_is_security_group" "bastion_server_sg" {
   name = "bastion-server-sg"
@@ -461,6 +461,12 @@ resource "ibm_is_security_group_rule" "bastion_server_rule_inbound_iaas_endpoint
   direction = "inbound"
   remote = var.iaas-service-endpoint-cidr
 }
+# add security group ingress for PowerVS traffic
+resource "ibm_is_security_group_rule" "bastion_server_rule_inbound_powervs" {
+  group = ibm_is_security_group.bastion_server_sg.id
+  direction = "inbound"
+  remote = var.powervs_subnet_cidr
+}
 
 resource "ibm_is_security_group_rule" "bastion_server_rule_5" {
   group = ibm_is_security_group.bastion_server_sg.id
@@ -498,7 +504,12 @@ resource "ibm_is_security_group_rule" "bastion_server_rule_outbound_iaas_endpoin
   direction = "outbound"
   remote = var.iaas-service-endpoint-cidr
 }
-
+# add security group egress rule to allow trafific outbound to powervs
+resource "ibm_is_security_group_rule" "bastion_server_rule_outbound_powervs" {
+  group = ibm_is_security_group.bastion_server_sg.id
+  direction = "outbound"
+  remote = var.powervs_subnet_cidr
+}
 
 ## Secrets Manager instance
 resource "ibm_resource_instance" "secrets_manager" {
