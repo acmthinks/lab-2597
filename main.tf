@@ -10,9 +10,9 @@
 ###############################################################################
 ## Create a Resource Group
 ##
-## Gets reference to an existing resource group, specified in terraform.tfvars
+## Creates a resource group
 ###############################################################################
-data "ibm_resource_group" "resource_group" {
+resource "ibm_resource_group" "resource_group" {
    name   = var.resource_group
 }
 
@@ -33,7 +33,7 @@ resource ibm_pi_workspace "powervs_workspace" {
   pi_name          = join("-", [var.prefix, "power-workspace"])
 
   pi_datacenter    = var.region
-  pi_resource_group_id  = data.ibm_resource_group.resource_group.id
+  pi_resource_group_id  = ibm_resource_group.resource_group.id
 }
 
 # Create SSH Key object in PowerVS workspace, based on the ssh public key
@@ -106,7 +106,7 @@ resource "ibm_pi_instance" "powervs-instance" {
 ###############################################################################
 resource "ibm_is_vpc" "edge_vpc" {
   name = join("-", [var.prefix, "edge-vpc"])
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   address_prefix_management = "manual"
   default_routing_table_name = join("-", [var.prefix, "edge-vpc", "rt", "default"])
   default_security_group_name = join("-", [var.prefix, "edge-vpc", "sg", "default"])
@@ -136,7 +136,7 @@ resource "ibm_is_subnet" "vpn_server_subnet" {
   name            = "vpn-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -152,7 +152,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
   name            = "bastion-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -363,7 +363,7 @@ resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attac
 resource "ibm_is_security_group" "vpn_server_sg" {
   name = "vpn-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "vpn_server_rule_1" {
@@ -423,7 +423,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 resource "ibm_is_security_group" "bastion_server_sg" {
   name = "bastion-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "bastion_server_rule_1" {
@@ -554,7 +554,7 @@ resource "ibm_sm_secret_group" "ssh_keys_secret_group" {
 resource "ibm_sm_arbitrary_secret" "ssh_key_secret" {
   instance_id   = ibm_resource_instance.secrets_manager.guid
   region        = var.region
-  name          = "andrea-ssh-public-key"
+  name          = join("-", [var.prefix, "ssh-key"])
   secret_group_id = ibm_sm_secret_group.ssh_keys_secret_group.secret_group_id
   payload       = "${var.public_ssh_key}"
 }
@@ -585,7 +585,7 @@ resource "ibm_is_vpn_server" "vpn_server" {
   port                   = 443
   protocol               = "udp"
   subnets                = [ibm_is_subnet.vpn_server_subnet.id]
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.vpn_server_sg.id]
 }
 
@@ -643,7 +643,7 @@ resource "ibm_is_instance" "bastion_server_vsi" {
 
   vpc  = ibm_is_vpc.edge_vpc.id
   zone = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
 }
 
@@ -653,7 +653,7 @@ resource "ibm_is_public_gateway" "public_gateway" {
   name = "public-gateway"
   vpc = ibm_is_vpc.edge_vpc.id
   zone = var.zone
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 #resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
@@ -670,7 +670,7 @@ resource "ibm_tg_gateway" "vpc_powervs_tg_gw"{
   name = "transit-gateway"
   location = var.region
   global = false
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
 }
 
 #create Transit Gateway connections to the VPC and to the PowerVS workspace
