@@ -728,19 +728,10 @@ resource "ibm_cos_bucket_object" "plaintext" {
 ## Name: cos-sg
 ## Rules:
 ##  Direction | Protocol  | Source          | Destination
-##  inbound   | TCP       | 10.50.0.0/24    | 0.0.0.0/0 [Ports 22-22]
-##  inbound   | ICMP      | 10.10.10.0/24   | 0.0.0.0/0 [Type:8, Code:Any]
-##  inbound   | ALL       | 10.50.0.0/25    | 0.0.0.0/0
-##  inbound   | ALL       | 161.26.0.0/16    | 0.0.0.0/0
-##  (inbound) | ALL       | 10.80.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
-
+##  inbound   | ALL       | 10.60.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
 ##
 ##  Direction | Protocol  | Source          | Destination
-##  egress    | TCP       | 0.0.0.0/0       | 10.50.0.0/24   [Ports 22-22]
-##  egress    | ICMP      | 0.0.0.0/0       | 10.50.0.0/24 [Type:8, Code:Any]
-##  egress    | ALL       | 0.0.0.0/0       | 10.50.0.0/25
-##  egress    | ALL       | 0.0.0.0/0       | 161.26.0.0/16
-##  (egress)  | ALL       | 0.0.0.0/0       | 10.80.0.128/25  for connecting to another VPC or PowerVS workspace
+##  egress    | ALL       | 0.0.0.0/0       | 10.60.0.128/25  for connecting to another VPC or PowerVS workspace
 ###############################################################################
 resource "ibm_is_security_group" "cos_sg" {
   name = "cos-sg"
@@ -754,6 +745,12 @@ resource "ibm_is_security_group_rule" "cos_ingress_rule_1" {
   remote = var.powervs_subnet_cidr
 }
 
+resource "ibm_is_security_group_rule" "cos_egress_rule_1" {
+  group = ibm_is_security_group.cos_sg.id
+  direction = "outbound"
+  remote = var.powervs_subnet_cidr
+}
+
 ###############################################################################
 ## Create a Virtual Private Endpoint Gateway
 ##
@@ -762,6 +759,7 @@ resource "ibm_is_security_group_rule" "cos_ingress_rule_1" {
 ###############################################################################
 
 resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
+  depends_on = [ ibm_resource_instance.cos ]
   name = "vpe-gateway"
   target {
     crn           = ibm_resource_instance.cos.crn
@@ -769,5 +767,5 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   }
   vpc            = ibm_is_vpc.edge_vpc.id
   resource_group = ibm_resource_group.resource_group.id
-  #security_groups = [ibm_is_security_group.example.id]
+  security_groups = [ibm_is_security_group.cos_sg.id]
 }
