@@ -762,7 +762,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   depends_on = [ ibm_resource_instance.cos ]
   name = "vpe-gateway"
   target {
-    crn           = ibm_resource_instance.cos.crn
+    name           = "cloud-object-storage"
     resource_type = "provider_cloud_service"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
