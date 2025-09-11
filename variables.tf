@@ -44,6 +44,7 @@ variable "powervs_supported_zone" {
 variable "powervs_subnet_cidr" {
   type        = string
   description = "IP Address CIDR for PowerVS workspace"
+  default = "10.60.0.0/24"
 }
 
 variable "powervs_instance_cores" {
