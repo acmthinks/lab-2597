@@ -28,6 +28,7 @@ variable "zone" {
 variable "public_ssh_key" {
   type = string
   description = "public key"
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC9WtH8MgfX434Pxt8jBDR8ILUWLeyIR8ajSuZdr7wVq4vpj7sal6M1Bri8n/jCBIO3LsllkjuRzf0X3xAH6S5BNpoalaH5yjZMXV8ieonslhpqcKzj2+vWcteuKIGgGOGit3qrdEwXQNJRk5w8TxEVIBs7YfzomoaYBMzx+10pFZ6VvbP8B+Vf+Xld4wGFKDST+ou5M4cHn93p2Jk4Gz4djumsJMPp9cIsC2aub8h8KC4/pgG/guQI99aUPqrA/pmoCERZx80BoN0TNBO7VE5XNE+QTQ80JMPC4qucGffGgK8Q/6oGWyho5w9Ujxky0SF6dnZUhcCACFeItpQJiebqhCdb75y0KaL7tkIBn/aaHyeLf2PpOu7aHchvi78azdNcGmIolH2JnXAnZ4mWeuX1CGtsDqJGkbHGEvADno/u1zyM2ZuUCnSzMzlkwWoSvtgPbkD9YxxzsE4/1yVz7w+QGUxbet5CQN4rGYS3yEavyF0o2qdkBTTXYpE450I+Xos="
 }
 
 

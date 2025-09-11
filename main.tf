@@ -56,6 +56,7 @@ resource "ibm_pi_network" "workload-subnet" {
   pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
   pi_network_type      = "vlan"
   pi_cidr              = var.powervs_subnet_cidr
+  #pi_advertise         = "enable"
 }
 
 
