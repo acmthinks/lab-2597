@@ -33,7 +33,7 @@ resource ibm_pi_workspace "powervs_workspace" {
   pi_name          = join("-", [var.prefix, "power-workspace"])
 
   pi_datacenter    = var.region
-  pi_resource_group_id  = data.ibm_resource_group.resource_group.id
+  pi_resource_group_id  = ibm_resource_group.resource_group.id
 }
 
 # Create SSH Key object in PowerVS workspace, based on the ssh public key
