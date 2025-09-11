@@ -705,8 +705,8 @@ resource "ibm_resource_instance" "cos" {
   name              = "cos"
   resource_group_id = ibm_resource_group.resource_group.id
   service           = "cloud-object-storage"
-  plan              = "lite"
-  location          = var.region
+  plan              = "standard"
+  location          = "global"
 }
 
 resource "ibm_cos_bucket" "cos_bucket" {
@@ -724,6 +724,37 @@ resource "ibm_cos_bucket_object" "plaintext" {
 }
 
 ###############################################################################
+## Create Security Group for Cloud Object Storage
+## Name: cos-sg
+## Rules:
+##  Direction | Protocol  | Source          | Destination
+##  inbound   | TCP       | 10.50.0.0/24    | 0.0.0.0/0 [Ports 22-22]
+##  inbound   | ICMP      | 10.10.10.0/24   | 0.0.0.0/0 [Type:8, Code:Any]
+##  inbound   | ALL       | 10.50.0.0/25    | 0.0.0.0/0
+##  inbound   | ALL       | 161.26.0.0/16    | 0.0.0.0/0
+##  (inbound) | ALL       | 10.80.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
+
+##
+##  Direction | Protocol  | Source          | Destination
+##  egress    | TCP       | 0.0.0.0/0       | 10.50.0.0/24   [Ports 22-22]
+##  egress    | ICMP      | 0.0.0.0/0       | 10.50.0.0/24 [Type:8, Code:Any]
+##  egress    | ALL       | 0.0.0.0/0       | 10.50.0.0/25
+##  egress    | ALL       | 0.0.0.0/0       | 161.26.0.0/16
+##  (egress)  | ALL       | 0.0.0.0/0       | 10.80.0.128/25  for connecting to another VPC or PowerVS workspace
+###############################################################################
+resource "ibm_is_security_group" "cos_sg" {
+  name = "cos-sg"
+  vpc = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+}
+
+resource "ibm_is_security_group_rule" "cos_ingress_rule_1" {
+  group = ibm_is_security_group.cos_sg.id
+  direction = "inbound"
+  remote = var.powervs_subnet_cidr
+}
+
+###############################################################################
 ## Create a Virtual Private Endpoint Gateway
 ##
 ## This creates a VPE GW to connect VPC to COS
@@ -733,7 +764,7 @@ resource "ibm_cos_bucket_object" "plaintext" {
 resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   name = "vpe-gateway"
   target {
-    name          = "cloud-object-storage"
+    crn           = ibm_resource_instance.cos.crn
     resource_type = "provider_cloud_service"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
