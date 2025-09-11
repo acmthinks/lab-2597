@@ -171,7 +171,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
 resource "ibm_is_network_acl" "vpn_server_subnet_acl" {
   name = "vpn-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-allow-same-subnet-ssh"
     action      = "allow"
@@ -254,7 +254,7 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
   name = "bastion-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-public-allow-all"
     action      = "allow"
@@ -518,7 +518,7 @@ resource "ibm_resource_instance" "secrets_manager" {
   service = "secrets-manager"
   plan = "standard"
   location = "us-south"
-  resource_group_id = data.ibm_resource_group.resource_group.id
+  resource_group_id = ibm_resource_group.resource_group.id
 
   parameters = {
     "allowed_network" = "public-and-private"
@@ -616,7 +616,7 @@ data "ibm_is_image" "debian" {
 
 resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   name = "bastion-server-vni"
-  resource_group = data.ibm_resource_group.resource_group.id
+  resource_group = ibm_resource_group.resource_group.id
   allow_ip_spoofing = false
   enable_infrastructure_nat = true
   auto_delete = false
@@ -701,27 +701,27 @@ resource "ibm_tg_connection" "powervs_connection" {
 ## Create Cloud Object Storage (and bucket)
 ##
 ###############################################################################
-#resource "ibm_resource_instance" "cos" {
-#  name              = "cos"
-#  resource_group_id = ibm_resource_group.resource_group.id
-#  service           = "cloud-object-storage"
-#  plan              = "lite"
-#  location          = var.region
-#}
+resource "ibm_resource_instance" "cos" {
+  name              = "cos"
+  resource_group_id = ibm_resource_group.resource_group.id
+  service           = "cloud-object-storage"
+  plan              = "lite"
+  location          = var.region
+}
 
-#resource "ibm_cos_bucket" "cos_bucket" {
-#  bucket_name          = "lil-bucket"
-#  resource_instance_id = ibm_resource_instance.cos.id
-#  region_location = var.region
-#  storage_class        = "smart"
-#}
+resource "ibm_cos_bucket" "cos_bucket" {
+  bucket_name          = "lil-bucket"
+  resource_instance_id = ibm_resource_instance.cos.id
+  region_location = var.region
+  storage_class        = "smart"
+}
 
-#resource "ibm_cos_bucket_object" "plaintext" {
-#  bucket_crn      = ibm_cos_bucket.cos_bucket.crn
-#  bucket_location = ibm_cos_bucket.cos_bucket.region_location
-#  content         = "IBM is a hybrid cloud and AI company."
-#  key             = "plaintext.txt"
-#}
+resource "ibm_cos_bucket_object" "plaintext" {
+  bucket_crn      = ibm_cos_bucket.cos_bucket.crn
+  bucket_location = ibm_cos_bucket.cos_bucket.region_location
+  content         = "IBM is a hybrid cloud and AI company."
+  key             = "plaintext.txt"
+}
 
 ###############################################################################
 ## Create a Virtual Private Endpoint Gateway
@@ -730,13 +730,13 @@ resource "ibm_tg_connection" "powervs_connection" {
 ## https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-vpes
 ###############################################################################
 
-#resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
-#  name = "vpe-gateway"
-#  target {
-#    name          = "cloud-object-storage"
-#    resource_type = "provider_cloud_service"
-#  }
-#  vpc            = ibm_is_vpc.edge_vpc.id
-#  resource_group = ibm_resource_group.resource_group.id
-#  #security_groups = [ibm_is_security_group.example.id]
-#}
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
+  name = "vpe-gateway"
+  target {
+    name          = "cloud-object-storage"
+    resource_type = "provider_cloud_service"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.example.id]
+}
