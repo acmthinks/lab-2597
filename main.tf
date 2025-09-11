@@ -10,9 +10,9 @@
 ###############################################################################
 ## Create a Resource Group
 ##
-## Gets reference to an existing resource group, specified in terraform.tfvars
+## Creates a resource group
 ###############################################################################
-data "ibm_resource_group" "resource_group" {
+resource "ibm_resource_group" "resource_group" {
    name   = var.resource_group
 }
 
@@ -56,6 +56,7 @@ resource "ibm_pi_network" "workload-subnet" {
   pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
   pi_network_type      = "vlan"
   pi_cidr              = var.powervs_subnet_cidr
+  #pi_advertise = "enable"
 }
 
 
