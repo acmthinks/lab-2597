@@ -640,20 +640,6 @@ resource "ibm_is_instance" "bastion_server_vsi" {
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
 }
 
-#Create a public gateway, but do not attach by default
-# this can be used to get access to the Intenret to install agents
-resource "ibm_is_public_gateway" "public_gateway" {
-  name = "public-gateway"
-  vpc = ibm_is_vpc.edge_vpc.id
-  zone = var.zone
-  resource_group = ibm_resource_group.resource_group.id
-}
-
-#resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
-#  subnet = ibm_is_subnet.bastion_subnet.id
-#  public_gateway = ibm_is_public_gateway.public_gateway.id
-#}
-
 ###############################################################################
 ## Create a Transit Gateway
 ##
