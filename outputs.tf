@@ -15,14 +15,14 @@ output "message" {
       Virtual Private Cloud: ${ibm_is_vpc.edge_vpc.name} [${ibm_is_vpc_address_prefix.edge_prefix.cidr}]
       Location: ${var.region}
       Zone: ${ibm_is_instance.bastion_server_vsi.zone}
-      URL: https://cloud.ibm.com/power/servers
+      URL: https://cloud.ibm.com/infrastructure/compute/vs
 
     A client VPN server has been provisioned. Here is how to connect to the bastion (jump server).
         1. Go to this link https://cloud.ibm.com/infrastructure/network/vpnServers and click on the VPN server name.
         2. From the "clients" tab, download the Client Profile Template (.ovpn file) from the VPN Server to your local machine.
         3. Double click on the .ovpn file. Connect with OpenVPN client.
-        4. Use the IBM Cloud id as the 'username".
-        5. For the password, obtain a one time only passcode: https://iam.cloud.ibm.com/identity/passcode (and copy/paste in the vpn client)
+        4. Use the IBM Cloud id as the client vpn 'username".
+        5. For the client vpn password, obtain a one time only passcode: https://iam.cloud.ibm.com/identity/passcode (and copy/paste in the vpn client)
         6. Use the ssh private key provided (id_lab2597.txt, it is only available to lab participants in TechZone and not in git)
         7. Be sure the private key file is at the proper permisison level (chmod 600 id_lab2597)
         8. On local terminal type the following to access the bastion (jump server):
