@@ -65,7 +65,7 @@ resource "ibm_pi_network" "workload-subnet" {
 ##
 ## This creates a PowerVS instance (or a vm) using the ssh key and subnet above
 ###############################################################################
-resource "ibm_pi_instance" "powervs-instance" {
+resource "ibm_pi_instance" "powervs_instance" {
     pi_memory             = var.powervs_instance_memory
     pi_processors         = var.powervs_instance_cores
     pi_instance_name      = join("-", [var.prefix, "power-vsi"])
