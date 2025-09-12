@@ -806,7 +806,7 @@ resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
 ###############################################################################
 resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
   subnet      = ibm_is_subnet.bastion_subnet.id
-  network_acl = ibm_is_vpc.edge_vpc.default_network_acl.id
+  network_acl = ibm_is_vpc.edge_vpc.default_network_acl
 }
 
 #Create a public gateway, but do not attach by default (see block after this one)
