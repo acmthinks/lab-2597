@@ -1,26 +1,31 @@
-output "vpn_server_url" {
-    value = ibm_is_vpn_server.vpn_server.hostname
-}
-
-output "bastion_server_vsi_ip" {
-    value = ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip
-    #value = ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].virtual_network_interface[0].
-}
-
-output "vpc_name" {
-    value = ibm_is_vpc.edge_vpc.name
-}
-
-output "vpc_crn" {
-    value = ibm_is_vpc.edge_vpc.crn
-}
-
 output "message" {
     value = <<EOM
-    1. Connect with OpenVPN. Be sure to download the client profile template (locally).
-    2. Obtain a one time only passcode: https://iam.cloud.ibm.com/identity/passcode
-    3. Connect using the client VPN template with your IBM Cloud username and the passcode as the password
-    4. On local terminal type the following to access the bastion server:
-    ssh root@${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip[0].address}
+###############################################################################
+###############################################################################
+##
+##  PART 2
+##
+###############################################################################
+###############################################################################
+
+    Bastion (jump server) virtual server instance details:
+      IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip.address}
+      vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu}
+      Memory: ${ibm_is_instance.bastion_server_vsi.memory}
+      Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vcpu}
+      Location: ${var.region}
+      Zone: ${ibm_is_instance.bastion_server_vsi.zone}
+      URL: https://cloud.ibm.com/power/servers
+
+    A client VPN server has been provisioned. Here is how to connect to the bastion (jump server).
+        1. Go to this link https://cloud.ibm.com/infrastructure/network/vpnServers and click on the VPN server name.
+        2. From the "clients" tab, download the Client Profile Template (.ovpn file) from the VPN Server to your local machine.
+        3. Double click on the .ovpn file. Connect with OpenVPN client.
+        4. Use the IBM Cloud id as the 'username".
+        5. For the password, obtain a one time only passcode: https://iam.cloud.ibm.com/identity/passcode (and copy/paste in the vpn client)
+        6. Use the ssh private key provided (id_lab2597.txt, it is only available to lab participants in TechZone and not in git)
+        7. Be sure the private key file is at the proper permisison level (chmod 600 id_lab2597)
+        8. On local terminal type the following to access the bastion (jump server):
+            ssh -i /path/id_lab2597 root@${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip[0].address}
     EOM
 }

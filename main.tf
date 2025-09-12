@@ -65,13 +65,12 @@ resource "ibm_pi_network" "workload-subnet" {
 ##
 ## This creates a PowerVS instance (or a vm) using the ssh key and subnet above
 ###############################################################################
-resource "ibm_pi_instance" "powervs-instance" {
+resource "ibm_pi_instance" "powervs_instance" {
     pi_memory             = var.powervs_instance_memory
     pi_processors         = var.powervs_instance_cores
     pi_instance_name      = join("-", [var.prefix, "power-vsi"])
     pi_proc_type          = "shared"
-    #pi_image_id           = data.ibm_pi_image.aix72_5_10_image.id
-    pi_image_id = "52f2891b-6e4b-4765-bc0e-43cdc036305a"
+    pi_image_id           = "e37d8d58-05fc-4843-b5e9-bddab5af4f0d"
     pi_key_pair_name      = ibm_pi_key.power_vsi_ssh_key.pi_key_name
     pi_sys_type           = var.powervs_system_type
     pi_cloud_instance_id  = ibm_pi_workspace.powervs_workspace.id
@@ -81,12 +80,6 @@ resource "ibm_pi_instance" "powervs-instance" {
       network_id = ibm_pi_network.workload-subnet[0].network_id
     }
 }
-
-#data "ibm_pi_image" "aix72_5_10_image" {
-#    pi_image_name = "52f2891b-6e4b-4765-bc0e-43cdc036305a"
-#    #pi_image_name = "7200-05-10"
-#    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
-#}
 
 
 
