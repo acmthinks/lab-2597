@@ -640,20 +640,6 @@ resource "ibm_is_instance" "bastion_server_vsi" {
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
 }
 
-#Create a public gateway, but do not attach by default
-# this can be used to get access to the Intenret to install agents
-resource "ibm_is_public_gateway" "public_gateway" {
-  name = "public-gateway"
-  vpc = ibm_is_vpc.edge_vpc.id
-  zone = var.zone
-  resource_group = ibm_resource_group.resource_group.id
-}
-
-#resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
-#  subnet = ibm_is_subnet.bastion_subnet.id
-#  public_gateway = ibm_is_public_gateway.public_gateway.id
-#}
-
 ###############################################################################
 ## Create a Transit Gateway
 ##
@@ -766,3 +752,72 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   resource_group = ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.cos_sg.id]
 }
+
+
+###############################################################################
+## Create resources to allow access to public Internet
+##
+## There may be cases where the PowerVS instance or the VPC instance needs
+## temporary access to the Internet (for example, to download the IBM Cloud CLI).
+## These resources will be provisioned but remain "detached" unless explicity
+## and intentially connected for specific purposes.
+###############################################################################
+
+# This public gateway security group is created, but not attached to any vsi by default
+# when ready to connect the bastion to the public gateway uncomment the code blocks below
+resource "ibm_is_security_group" "public_gateway_sg" {
+  name = "public-gateway-sg"
+  vpc = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+}
+
+#allows the bastion server to accept inbound requests on port 443
+resource "ibm_is_security_group_rule" "public_443_ingress_rule_1" {
+  group = ibm_is_security_group.public_gateway_sg.id
+  direction = "inbound"
+  remote = var.edge_vpc_bastion_cidr
+}
+
+#allows the bastion server to send outbound requests on port 443
+resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
+  group = ibm_is_security_group.public_gateway_sg.id
+  direction = "outbound"
+  remote = var.edge_vpc_bastion_cidr
+}
+
+# Switch the bastion server to the public gateway security group
+# find the other instance of this block and comment it out so this replaces
+#resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
+#  name = "bastion-server-vni"
+#  resource_group = ibm_resource_group.resource_group.id
+#  allow_ip_spoofing = false
+#  enable_infrastructure_nat = true
+#  auto_delete = false
+#  subnet = ibm_is_subnet.bastion_subnet.id
+#  security_groups = [ibm_is_security_group.public_gateway_sg.id]
+#}
+
+###############################################################################
+## Attach the default NACL to the Bastion Server subnet
+# Switch the bastion server to the public gateway security group
+# find the other instance of this block and comment it out so this replaces
+###############################################################################
+#resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
+#  subnet      = ibm_is_subnet.bastion_subnet.id
+#  network_acl = ibm_is_vpc.edge_vpc.default_network_acl.id
+#}
+
+#Create a public gateway, but do not attach by default (see block after this one)
+# this can be used to get access to the Intenret to install agents
+resource "ibm_is_public_gateway" "public_gateway" {
+  name = "public-gateway"
+  vpc = ibm_is_vpc.edge_vpc.id
+  zone = var.zone
+  resource_group = ibm_resource_group.resource_group.id
+}
+
+#uncomment the block below to attach the bastion subnet to the public gateway
+#resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
+#  subnet = ibm_is_subnet.bastion_subnet.id
+#  public_gateway = ibm_is_public_gateway.public_gateway.id
+#}
