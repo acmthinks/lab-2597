@@ -9,7 +9,7 @@ output "message" {
 ###############################################################################
 
     Bastion (jump server) virtual server instance details:
-      IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].address}
+      IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip}
       vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu}
       Memory: ${ibm_is_instance.bastion_server_vsi.memory}
       Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vcpu}
