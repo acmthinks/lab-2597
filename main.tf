@@ -89,6 +89,7 @@ resource "ibm_pi_instance" "powervs_instance" {
 #}
 
 data "ibm_pi_image" "rhel9_sp4_stock_image" {
+    #pi_image_id  = "e37d8d58-05fc-4843-b5e9-bddab5af4f0d"
     pi_image_name = "RHEL9-SP4"
-    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.crn
 }
