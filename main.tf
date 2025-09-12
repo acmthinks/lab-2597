@@ -94,6 +94,6 @@ resource "ibm_pi_instance" "powervs_instance" {
 #    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
 #}
 
-data "ibm_pi_images" "stock_images" {
-    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
-}
+#data "ibm_pi_images" "stock_images" {
+#    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+#}
