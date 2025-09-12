@@ -87,3 +87,8 @@ resource "ibm_pi_instance" "powervs-instance" {
 #    #pi_image_name = "7200-05-10"
 #    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
 #}
+
+data "ibm_pi_image" "rhel9_sp4_stock_image" {
+    pi_image_id = "RHEL9-SP4"
+    pi_cloud_instance_id = ibm_pi_workspace.powervs_workspace.id
+}
