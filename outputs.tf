@@ -8,3 +8,8 @@ output "powervs_details" {
       Location: ${ibm_pi_workspace.powervs_workspace.pi_datacenter}
     EOM
 }
+
+output "stock_images" {
+  value = data.ibm_pi_images.stock_images
+
+}
