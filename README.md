@@ -7,4 +7,4 @@ IBM Cloud Schematics is an infrastructure-as-code (IaC) service that enables use
 3. Examine the Schematics Workspace
 4. Validate the IBM Cloud resources provisioned
 
-![image](architecture.png "Part 1 architecture")
+![image](./architecture.png "Part 1 architecture")
