@@ -27,6 +27,6 @@ output "message" {
         7. Be sure the private key file is at the proper permisison level (chmod 600 id_lab2597)
         8. On local terminal type the following to access the bastion (jump server):
             ssh -i /path/id_lab2597 root@${ibm_is_instance.bastion_server_vsi.primary_network_interface[0].primary_ip[0].address}
-${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].virtual_network_interface[0].}
+
     EOM
 }
