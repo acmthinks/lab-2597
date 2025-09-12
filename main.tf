@@ -335,11 +335,12 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
 
 ###############################################################################
 ## Attach the NACL to the Bastion Server subnet
+## commented out to replace network_acl with public access in Part 3
 ###############################################################################
-resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
-  subnet      = ibm_is_subnet.bastion_subnet.id
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-}
+#resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
+#  subnet      = ibm_is_subnet.bastion_subnet.id
+#  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
+#}
 
 ###############################################################################
 ## Create Security Group for VPN Server
@@ -607,15 +608,16 @@ data "ibm_is_image" "debian" {
   name = "ibm-debian-13-minimal-amd64-1"
 }
 
-resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
-  name = "bastion-server-vni"
-  resource_group = ibm_resource_group.resource_group.id
-  allow_ip_spoofing = false
-  enable_infrastructure_nat = true
-  auto_delete = false
-  subnet = ibm_is_subnet.bastion_subnet.id
-  security_groups = [ibm_is_security_group.bastion_server_sg.id]
-}
+#commented out to allow bastion server access to public gateway
+#resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
+#  name = "bastion-server-vni"
+#  resource_group = ibm_resource_group.resource_group.id
+#  allow_ip_spoofing = false
+#  enable_infrastructure_nat = true
+#  auto_delete = false
+#  subnet = ibm_is_subnet.bastion_subnet.id
+#  security_groups = [ibm_is_security_group.bastion_server_sg.id]
+#}
 
 resource "ibm_is_instance" "bastion_server_vsi" {
   name    = "bastion-server-vsi"
@@ -787,25 +789,25 @@ resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
 
 # Switch the bastion server to the public gateway security group
 # find the other instance of this block and comment it out so this replaces
-#resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
-#  name = "bastion-server-vni"
-#  resource_group = ibm_resource_group.resource_group.id
-#  allow_ip_spoofing = false
-#  enable_infrastructure_nat = true
-#  auto_delete = false
-#  subnet = ibm_is_subnet.bastion_subnet.id
-#  security_groups = [ibm_is_security_group.public_gateway_sg.id]
-#}
+resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
+  name = "bastion-server-vni"
+  resource_group = ibm_resource_group.resource_group.id
+  allow_ip_spoofing = false
+  enable_infrastructure_nat = true
+  auto_delete = false
+  subnet = ibm_is_subnet.bastion_subnet.id
+  security_groups = [ibm_is_security_group.public_gateway_sg.id]
+}
 
 ###############################################################################
 ## Attach the default NACL to the Bastion Server subnet
 # Switch the bastion server to the public gateway security group
 # find the other instance of this block and comment it out so this replaces
 ###############################################################################
-#resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
-#  subnet      = ibm_is_subnet.bastion_subnet.id
-#  network_acl = ibm_is_vpc.edge_vpc.default_network_acl.id
-#}
+resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attachment" {
+  subnet      = ibm_is_subnet.bastion_subnet.id
+  network_acl = ibm_is_vpc.edge_vpc.default_network_acl.id
+}
 
 #Create a public gateway, but do not attach by default (see block after this one)
 # this can be used to get access to the Intenret to install agents
@@ -817,7 +819,7 @@ resource "ibm_is_public_gateway" "public_gateway" {
 }
 
 #uncomment the block below to attach the bastion subnet to the public gateway
-#resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
-#  subnet = ibm_is_subnet.bastion_subnet.id
-#  public_gateway = ibm_is_public_gateway.public_gateway.id
-#}
+resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
+  subnet = ibm_is_subnet.bastion_subnet.id
+  public_gateway = ibm_is_public_gateway.public_gateway.id
+}
