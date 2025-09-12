@@ -12,7 +12,7 @@ output "message" {
       IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_interface[0].primary_ip[0].address}
       vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu[0].count}
       Memory: ${ibm_is_instance.bastion_server_vsi.memory}
-      Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vpc}
+      Virtual Private Cloud: ${ibm_is_vpc.edge_vpc.name} [${ibm_is_vpc_address_prefix.edge_prefix.cidr}]
       Location: ${var.region}
       Zone: ${ibm_is_instance.bastion_server_vsi.zone}
       URL: https://cloud.ibm.com/power/servers
