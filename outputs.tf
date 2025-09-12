@@ -10,7 +10,7 @@ output "message" {
 
     Bastion (jump server) virtual server instance details:
       IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_interface[0].primary_ip[0].address}
-      vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu.count}
+      vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu[0].count}
       Memory: ${ibm_is_instance.bastion_server_vsi.memory}
       Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vpc}
       Location: ${var.region}
