@@ -9,10 +9,10 @@ output "message" {
 ###############################################################################
 
     Bastion (jump server) virtual server instance details:
-      IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip}
-      vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu}
+      IP address: ${ibm_is_instance.bastion_server_vsi.primary_network_interface[0].primary_ip[0].address}
+      vCPU: ${ibm_is_instance.bastion_server_vsi.vcpu.count}
       Memory: ${ibm_is_instance.bastion_server_vsi.memory}
-      Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vcpu}
+      Virtual Private Cloud: ${ibm_is_instance.bastion_server_vsi.vpc}
       Location: ${var.region}
       Zone: ${ibm_is_instance.bastion_server_vsi.zone}
       URL: https://cloud.ibm.com/power/servers
@@ -26,7 +26,7 @@ output "message" {
         6. Use the ssh private key provided (id_lab2597.txt, it is only available to lab participants in TechZone and not in git)
         7. Be sure the private key file is at the proper permisison level (chmod 600 id_lab2597)
         8. On local terminal type the following to access the bastion (jump server):
-            ssh -i /path/id_lab2597 root@${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].primary_ip}
-
+            ssh -i /path/id_lab2597 root@${ibm_is_instance.bastion_server_vsi.primary_network_interface[0].primary_ip[0].address}
+${ibm_is_instance.bastion_server_vsi.primary_network_attachment[0].virtual_network_interface[0].}
     EOM
 }
