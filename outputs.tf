@@ -8,5 +8,13 @@ output "message" {
 ###############################################################################
 ###############################################################################
 
+COS details:
+Instance name: ${ibm_resource_instance.cos.name}
+Instance crn: ${ibm_resource_instance.cos.crn}
+Private endpoint:  https://s3.private.${var.region}.cloud-object-storage.appdomain.cloud
+    Bucket name: ${ibm_cos_bucket.cos_bucket.bucket_name}
+
+###############################################################################
+###############################################################################
 EOM
 }
