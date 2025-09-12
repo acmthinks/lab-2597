@@ -70,7 +70,8 @@ resource "ibm_pi_instance" "powervs_instance" {
     pi_processors         = var.powervs_instance_cores
     pi_instance_name      = join("-", [var.prefix, "power-vsi"])
     pi_proc_type          = "shared"
-    pi_image_id           = data.ibm_pi_images.rhel9_sp4_stock_image.id
+    #pi_image_id           = data.ibm_pi_images.rhel9_sp4_stock_image.id
+    pi_image_id           = "e37d8d58-05fc-4843-b5e9-bddab5af4f0d"
     #pi_image_id = "52f2891b-6e4b-4765-bc0e-43cdc036305a"
     pi_key_pair_name      = ibm_pi_key.power_vsi_ssh_key.pi_key_name
     pi_sys_type           = var.powervs_system_type
