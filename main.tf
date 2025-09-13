@@ -777,14 +777,24 @@ resource "ibm_is_security_group" "public_gateway_sg" {
 resource "ibm_is_security_group_rule" "public_443_ingress_rule_1" {
   group = ibm_is_security_group.public_gateway_sg.id
   direction = "inbound"
-  remote = var.edge_vpc_bastion_cidr
+  local = var.edge_vpc_bastion_cidr
+  remote = "0.0.0.0/0"
+  tcp {
+    port_min = 443
+    port_max = 443
+  }
 }
 
 #allows the bastion server to send outbound requests on port 443
 resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
   group = ibm_is_security_group.public_gateway_sg.id
   direction = "outbound"
-  remote = var.edge_vpc_bastion_cidr
+  local = var.edge_vpc_bastion_cidr
+  remote = "0.0.0.0/0"
+  tcp {
+    port_min = 443
+    port_max = 443
+  }
 }
 
 # Switch the bastion server to the public gateway security group
@@ -796,7 +806,7 @@ resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   enable_infrastructure_nat = true
   auto_delete = false
   subnet = ibm_is_subnet.bastion_subnet.id
-  security_groups = [ibm_is_security_group.public_gateway_sg.id]
+  security_groups = [ibm_is_security_group.bastion_server_sg.id, ibm_is_security_group.public_gateway_sg.id]
 }
 
 ###############################################################################
