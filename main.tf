@@ -753,6 +753,147 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
   security_groups = [ibm_is_security_group.cos_sg.id]
 }
 
+#Account Management: Endpoint URL (https://private.accounts.cloud.ibm.com)
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_account_mgmt" {
+  name = "vpe-gateway-account-mgmt"
+  target {
+    crn           = "crn:v1:bluemix:public:account-management:global:::endpoint:private.accounts.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-account-mgmt-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Identity and Access Management: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_iam" {
+  name = "vpe-gateway-iam"
+  target {
+    crn           = "crn:v1:bluemix:public:iam-svcs:global:::endpoint:private.iam.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-iam-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Global Catalog: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_global_catalog" {
+  name = "vpe-gateway-global-catalog"
+  target {
+    crn           = "crn:v1:bluemix:public:globalcatalog:global:::endpoint:private.globalcatalog.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-global-catalog-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Global Search: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_global_search" {
+  name = "vpe-gateway-global-search"
+  target {
+    crn           = "crn:v1:bluemix:public:global-search-tagging:global:::endpoint:api.private.global-search-tagging.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-global-global-search-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Global Tagging: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_tagging" {
+  name = "vpe-gateway-tagging"
+  target {
+    crn           = "crn:v1:bluemix:public:ghost-tags:global:::endpoint:tags.private.global-search-tagging.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-tagging-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Usage Metering/Billing: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_billing" {
+  name = "vpe-gateway-billing"
+  target {
+    crn           = "crn:v1:bluemix:public:billing:global:::endpoint:private.billing.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-billing-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+
+#Enterprise Management: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_enterprise_mgmt" {
+  name = "vpe-gateway-enterprise-mgmt"
+  target {
+    crn           = "crn:v1:bluemix:public:enterprise:global:::endpoint:private.enterprise.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-enterprise-mgmt-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+#Resource Controller: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_resource_controller" {
+  name = "vpe-gateway-resource-controller"
+  target {
+    crn           = "crn:v1:bluemix:public:resource-controller:global:::endpoint:private.resource-controller.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-resource-controller-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
+#User Management: Endpoint URL
+resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway_user_mgmt" {
+  name = "vpe-gateway-user-mgmt"
+  target {
+    crn           = "crn:v1:bluemix:public:user-management:global:::endpoint:private.user-management.cloud.ibm.com"
+    resource_type = "provider_cloud_service"
+  }
+  ips {
+    subnet        = ibm_is_subnet.bastion_subnet.id
+    name          = "reserved-user-mgmt-ip"
+  }
+  vpc            = ibm_is_vpc.edge_vpc.id
+  resource_group = ibm_resource_group.resource_group.id
+  #security_groups = [ibm_is_security_group.cos_sg.id]
+}
 
 ###############################################################################
 ## Create resources to allow access to public Internet
@@ -765,25 +906,25 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_gateway" {
 
 # This public gateway security group is created, but not attached to any vsi by default
 # when ready to connect the bastion to the public gateway uncomment the code blocks below
-resource "ibm_is_security_group" "public_gateway_sg" {
-  name = "public-gateway-sg"
-  vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
-}
+#resource "ibm_is_security_group" "public_gateway_sg" {
+#  name = "public-gateway-sg"
+#  vpc = ibm_is_vpc.edge_vpc.id
+#  resource_group = ibm_resource_group.resource_group.id
+#}
 
 #allows the bastion server to accept inbound requests on port 443
-resource "ibm_is_security_group_rule" "public_443_ingress_rule_1" {
-  group = ibm_is_security_group.public_gateway_sg.id
-  direction = "inbound"
-  remote = var.edge_vpc_bastion_cidr
-}
+#resource "ibm_is_security_group_rule" "public_443_ingress_rule_1" {
+#  group = ibm_is_security_group.public_gateway_sg.id
+#  direction = "inbound"
+#  remote = var.edge_vpc_bastion_cidr
+#}
 
 #allows the bastion server to send outbound requests on port 443
-resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
-  group = ibm_is_security_group.public_gateway_sg.id
-  direction = "outbound"
-  remote = var.edge_vpc_bastion_cidr
-}
+#resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
+#  group = ibm_is_security_group.public_gateway_sg.id
+#  direction = "outbound"
+#  remote = var.edge_vpc_bastion_cidr
+#}
 
 # Switch the bastion server to the public gateway security group
 # find the other instance of this block and comment it out so this replaces
@@ -809,12 +950,12 @@ resource "ibm_is_security_group_rule" "public_443_egress_rule_1" {
 
 #Create a public gateway, but do not attach by default (see block after this one)
 # this can be used to get access to the Intenret to install agents
-resource "ibm_is_public_gateway" "public_gateway" {
-  name = "public-gateway"
-  vpc = ibm_is_vpc.edge_vpc.id
-  zone = var.zone
-  resource_group = ibm_resource_group.resource_group.id
-}
+#resource "ibm_is_public_gateway" "public_gateway" {
+#  name = "public-gateway"
+#  vpc = ibm_is_vpc.edge_vpc.id
+#  zone = var.zone
+#  resource_group = ibm_resource_group.resource_group.id
+#}
 
 #uncomment the block below to attach the bastion subnet to the public gateway
 #resource "ibm_is_subnet_public_gateway_attachment" "public_gateway_attach"{
