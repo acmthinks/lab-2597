@@ -50,13 +50,13 @@ variable "powervs_subnet_cidr" {
 variable "powervs_instance_cores" {
   type        = string
   description =  "number of physical cores (can be fractional to .25)"
-  default = ".25"
+  default = ".5"
 }
 
 variable "powervs_instance_memory" {
   type        = number
   description =  "amount of memory (GiB)"
-  default = 2
+  default = 4
 }
 
 variable "powervs_system_type" {
