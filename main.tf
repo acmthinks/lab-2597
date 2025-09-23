@@ -306,7 +306,7 @@ resource "ibm_is_network_acl_rule" "inbound-deny-all" {
   direction   = "inbound"
   source      = "0.0.0.0/0"
   destination = var.edge_vpc_bastion_cidr
-  #before      = "null"
+  before      = "null"
 }
 
 
@@ -378,7 +378,7 @@ resource "ibm_is_network_acl_rule" "outbound-deny-all" {
   direction   = "outbound"
   source      = var.edge_vpc_bastion_cidr
   destination = "0.0.0.0/0"
-  #before      = "null"
+  before      = "null"
 }
 
 
@@ -806,20 +806,20 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_cos" {
 }
 
 #NTP  (https://private.accounts.cloud.ibm.com)
-resource "ibm_is_virtual_endpoint_gateway" "vpe_ntp" {
-  name = "ntp-vpe"
-  target {
-    name           = "ibm-ntp-server"
-    resource_type = "provider_cloud_service"
-  }
-  ips {
-    subnet        = ibm_is_subnet.bastion_subnet.id
-    name          = "ntp-vpe-ip"
-  }
-  vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
-  security_groups = [ibm_is_security_group.bastion_server_sg.id]
-}
+#resource "ibm_is_virtual_endpoint_gateway" "vpe_ntp" {
+#  name = "ntp-vpe"
+#  target {
+#    name           = "ibm-ntp-server"
+#    resource_type = "provider_cloud_service"
+#  }
+#  ips {
+#    subnet        = ibm_is_subnet.bastion_subnet.id
+#    name          = "ntp-vpe-ip"
+#  }
+#  vpc            = ibm_is_vpc.edge_vpc.id
+#  resource_group = ibm_resource_group.resource_group.id
+#  security_groups = [ibm_is_security_group.bastion_server_sg.id]
+#}
 
 #Account Management: Endpoint URL (https://private.accounts.cloud.ibm.com)
 resource "ibm_is_virtual_endpoint_gateway" "vpe_account_management" {
