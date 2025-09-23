@@ -258,7 +258,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-public-all" {
   protocol    = "all"
   source      = var.edge_vpc_public_cidr
   destination = var.edge_vpc_bastion_cidr
-  rule_id     = 1
   }
 
 resource "ibm_is_network_acl_rule" "inbound-allow-same-subnet-to-vpn" {
@@ -269,7 +268,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-same-subnet-to-vpn" {
   protocol    = "all"
   source      = var.edge_vpc_vpn_cidr
   destination = var.edge_vpc_bastion_cidr
-  rule_id     = 2
 }
 # add rule to allow traffic from PowerVS workspace
 resource "ibm_is_network_acl_rule" "inbound-allow-powervs-workspace" {
@@ -280,7 +278,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-powervs-workspace" {
   protocol    = "all"
   source      = var.powervs_subnet_cidr
   destination = "0.0.0.0/0"
-  rule_id     = 3
 }
 
 resource "ibm_is_network_acl_rule" "inbound-allow-iaas-service-endpoints" {
@@ -291,7 +288,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-iaas-service-endpoints" {
   protocol    = "all"
   source      = var.iaas-service-endpoint-cidr
   destination = "0.0.0.0/0"
-  rule_id     = 4
 }
 
 # placed last as a catch all inbound rule
@@ -303,7 +299,7 @@ resource "ibm_is_network_acl_rule" "inbound-deny-all" {
   protocol    = "all"
   source      = "0.0.0.0/0"
   destination = var.edge_vpc_bastion_cidr
-  rule_id     = 99
+  before      = "null"
 }
 
 
@@ -315,7 +311,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-public-all" {
   protocol    = "all"
   source      = var.edge_vpc_bastion_cidr
   destination = var.edge_vpc_public_cidr
-  rule_id     = 1
  }
 
 resource "ibm_is_network_acl_rule" "outboumd-allow-bastion-to-vpn" {
@@ -326,7 +321,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-bastion-to-vpn" {
   protocol    = "all"
   source      = var.edge_vpc_bastion_cidr
   destination = var.edge_vpc_vpn_cidr
-  rule_id     = 2
 }
 
 resource "ibm_is_network_acl_rule" "outboumd-allow-same-subnet-to-any" {
@@ -340,7 +334,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-same-subnet-to-any" {
       source_port_min = 443
       source_port_max = 443
     }
-  rule_id     = 3
 }
 
 # add rule to allow traffic from PowerVS workspace
@@ -351,7 +344,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-powervs" {
   direction   = "outbound"
   source      = var.edge_vpc_bastion_cidr
   destination = var.powervs_subnet_cidr
-  rule_id     = 4
 }
 
 resource "ibm_is_network_acl_rule" "outboumd-allow-iaas-service-endpoints" {
@@ -361,7 +353,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-iaas-service-endpoints" {
   direction   = "outbound"
   source      = var.edge_vpc_bastion_cidr
   destination = var.iaas-service-endpoint-cidr
-  rule_id     = 5
 }
 
 # placed last as a catch all outbound rule
@@ -372,7 +363,7 @@ resource "ibm_is_network_acl_rule" "outbound-deny-all" {
   direction   = "outbound"
   source      = var.edge_vpc_bastion_cidr
   destination = "0.0.0.0/0"
-  rule_id     = 99
+  before      = "null"
 }
 
 
