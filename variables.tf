@@ -50,13 +50,13 @@ variable "powervs_subnet_cidr" {
 variable "powervs_instance_cores" {
   type        = string
   description =  "number of physical cores (can be fractional to .25)"
-  default = ".25"
+  default = ".5"
 }
 
 variable "powervs_instance_memory" {
   type        = number
   description =  "amount of memory (GiB)"
-  default = 2
+  default = 4
 }
 
 variable "powervs_system_type" {
@@ -118,4 +118,10 @@ variable "iaas-service-endpoint-cidr" {
   type = string
   description = "Infrastructure services are available by using certain DNS names from the adn.networklayer.com domain, and they resolve to 161.26.0.0/16 addresses. Services that you can reach include: DNS resolvers, Ubuntu and Debian APT mirrors, NTP, IBM COS."
   default = "161.26.0.0/16"
+}
+
+variable "vpe-service-endpoint-cidr" {
+  type = string
+  description = "Infrastructure services are available by using certain DNS names from the adn.networklayer.com domain, and they resolve to 161.26.0.0/16 addresses. Services that you can reach include: DNS resolvers, Ubuntu and Debian APT mirrors, NTP, IBM COS."
+  default = "166.9.0.0/16"
 }
