@@ -294,7 +294,7 @@ resource "ibm_is_network_acl_rule" "inbound-deny-all" {
   direction   = "inbound"
   source      = "0.0.0.0/0"
   destination = var.edge_vpc_bastion_cidr
-  before      = "null"
+  #before      = "null"
 }
 
 
@@ -356,7 +356,7 @@ resource "ibm_is_network_acl_rule" "outbound-deny-all" {
   direction   = "outbound"
   source      = var.edge_vpc_bastion_cidr
   destination = "0.0.0.0/0"
-  before      = "null"
+  #before      = "null"
 }
 
 
