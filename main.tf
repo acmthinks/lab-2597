@@ -255,7 +255,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-public-all" {
   name        = "inbound-allow-public-all"
   action      = "allow"
   direction   = "inbound"
-  protocol    = "all"
   source      = var.edge_vpc_public_cidr
   destination = var.edge_vpc_bastion_cidr
   }
@@ -265,7 +264,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-same-subnet-to-vpn" {
   name        = "inbound-allow-same-subnet-to-vpn"
   action      = "allow"
   direction   = "inbound"
-  protocol    = "all"
   source      = var.edge_vpc_vpn_cidr
   destination = var.edge_vpc_bastion_cidr
 }
@@ -275,7 +273,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-powervs-workspace" {
   name        = "inbound-allow-powervs-workspace"
   action      = "allow"
   direction   = "inbound"
-  protocol    = "all"
   source      = var.powervs_subnet_cidr
   destination = "0.0.0.0/0"
 }
@@ -285,7 +282,6 @@ resource "ibm_is_network_acl_rule" "inbound-allow-iaas-service-endpoints" {
   name        = "inbound-allow-iaas-service-endpoints"
   action      = "allow"
   direction   = "inbound"
-  protocol    = "all"
   source      = var.iaas-service-endpoint-cidr
   destination = "0.0.0.0/0"
 }
@@ -296,7 +292,6 @@ resource "ibm_is_network_acl_rule" "inbound-deny-all" {
   name        = "inbound-deny-all"
   action      = "deny"
   direction   = "inbound"
-  protocol    = "all"
   source      = "0.0.0.0/0"
   destination = var.edge_vpc_bastion_cidr
   before      = "null"
@@ -308,7 +303,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-public-all" {
   name        = "oubbound-allow-all"
   action      = "allow"
   direction   = "outbound"
-  protocol    = "all"
   source      = var.edge_vpc_bastion_cidr
   destination = var.edge_vpc_public_cidr
  }
@@ -318,7 +312,6 @@ resource "ibm_is_network_acl_rule" "outboumd-allow-bastion-to-vpn" {
   name        = "outbound-allow-same-subnet-to-vpn"
   action      = "allow"
   direction   = "outbound"
-  protocol    = "all"
   source      = var.edge_vpc_bastion_cidr
   destination = var.edge_vpc_vpn_cidr
 }
