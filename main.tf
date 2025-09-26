@@ -233,7 +233,7 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  #   | Direction | Action    | Protocol  | Source        | Destination
 ##  1   | inbound   | Allow     | ALL       | 192.168.0.0/16| 10.50.0.128/25 Internet traffic through Client VPN Server
 ##  2   | inbound   | Allow     | ALL       | 10.50.0.0/25  | 10.50.0.128/25
-##  (3) | inbound   | Allow     | ALL       | 10.80.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (3) | inbound   | Allow     | ALL       | 10.60.0.128/25| 10.50.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (4) | inbound   | Allow     | ALL       | 161.26.0.0/16 | 0.0.0.0/0 IaaS service endpoints (RHN, NTP, DNS, et al)
 ##  (5) | inbound   | Allow     | TCP       | 166.9.0.0/16  | 10.50.0.128/25  VPE service endpoints (use for VPE gateways)
 ##  12  | inbound   | Deny      | ALL       | 0.0.0.0/0     | 10.50.0.128/25
@@ -241,7 +241,7 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 ##  1   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 192.168.0.0/16 Internet traffic through Client VPN Server
 ##  2   | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.50.0.0/25
 ##  3   | outbound  | Allow     | TCP       | 10.50.0.128/25 443 | 0.0.0.0/0
-##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.80.0.128/25 for connecting to another VPC or PowerVS workspace
+##  (4) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 10.60.0.128/25 for connecting to another VPC or PowerVS workspace
 ##  (5) | outbound  | Allow     | ALL       | 10.50.0.128/25 | 161.26.0.0/16 IaaS service endpoints (RHN, NTP, DNS, et al)
 ##  (6) | outbound  | Allow     | TCP       | 10.50.0.128/25 | 166.9.0.0/16 VPE service endpoints (use for VPE gateways)
 ##  12  | outbound  | Deny      | ALL       | 10.50.0.128/25     | 0.0.0.0/0
@@ -250,135 +250,89 @@ resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
   name = "bastion-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
   resource_group = ibm_resource_group.resource_group.id
-}
-
-resource "ibm_is_network_acl_rule" "inbound-allow-public-all" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-allow-public-all"
-  action      = "allow"
-  direction   = "inbound"
-  source      = var.edge_vpc_public_cidr
-  destination = var.edge_vpc_bastion_cidr
+  rules {
+    name        = "inbound-allow-vpn-traffic"
+    action      = "allow"
+    source      = var.edge_vpc_public_cidr
+    destination = var.edge_vpc_bastion_cidr
+    direction   = "inbound"
   }
-
-resource "ibm_is_network_acl_rule" "inbound-allow-same-subnet-to-vpn" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-allow-same-subnet-to-vpn"
-  action      = "allow"
-  direction   = "inbound"
-  source      = var.edge_vpc_vpn_cidr
-  destination = var.edge_vpc_bastion_cidr
-}
-# add rule to allow traffic from PowerVS workspace
-resource "ibm_is_network_acl_rule" "inbound-allow-powervs-workspace" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-allow-powervs-workspace"
-  action      = "allow"
-  direction   = "inbound"
-  source      = var.powervs_subnet_cidr
-  destination = "0.0.0.0/0"
-}
-
-resource "ibm_is_network_acl_rule" "inbound-allow-iaas-service-endpoints" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-allow-iaas-service-endpoints"
-  action      = "allow"
-  direction   = "inbound"
-  source      = var.iaas-service-endpoint-cidr
-  destination = "0.0.0.0/0"
-}
-
-# add rule to allow traffic from VPE services
-resource "ibm_is_network_acl_rule" "inbound_allow_vpe_service_endpoints" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-vpe-allow"
-  action      = "allow"
-  direction   = "inbound"
-  source      = var.vpe-service-endpoint-cidr
-  destination = "0.0.0.0/0"
-}
-
-# placed last as a catch all inbound rule
-resource "ibm_is_network_acl_rule" "inbound-deny-all" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "inbound-deny-all"
-  action      = "deny"
-  direction   = "inbound"
-  source      = "0.0.0.0/0"
-  destination = var.edge_vpc_bastion_cidr
-  before      = "null"
-}
-
-
-resource "ibm_is_network_acl_rule" "outboumd-allow-public-all" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "oubbound-allow-all"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = var.edge_vpc_public_cidr
- }
-
-resource "ibm_is_network_acl_rule" "outboumd-allow-bastion-to-vpn" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-allow-same-subnet-to-vpn"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = var.edge_vpc_vpn_cidr
-}
-
-resource "ibm_is_network_acl_rule" "outboumd-allow-same-subnet-to-any" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-allow-same-subnet-to-any"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = "0.0.0.0/0"
-    tcp {
-      source_port_min = 443
-      source_port_max = 443
-    }
-}
-
-# add rule to allow traffic from PowerVS workspace
-resource "ibm_is_network_acl_rule" "outboumd-allow-powervs" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-powervs-workspace"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = var.powervs_subnet_cidr
-}
-
-resource "ibm_is_network_acl_rule" "outboumd-allow-iaas-service-endpoints" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-iaas-service-endpoints"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = var.iaas-service-endpoint-cidr
-}
-
-# add rule to allow traffic to VPE services
-resource "ibm_is_network_acl_rule" "outbound_allow_vpe_service_endpoints" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-vpe-allow"
-  action      = "allow"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = var.vpe-service-endpoint-cidr
-}
-
-# placed last as a catch all outbound rule
-resource "ibm_is_network_acl_rule" "outbound-deny-all" {
-  network_acl = ibm_is_network_acl.bastion_server_subnet_acl.id
-  name        = "outbound-deny-all"
-  action      = "deny"
-  direction   = "outbound"
-  source      = var.edge_vpc_bastion_cidr
-  destination = "0.0.0.0/0"
-  before      = "null"
+  rules {
+    name        = "inbound-allow-same-subnet-to-vpn"
+    action      = "allow"
+    source      = var.edge_vpc_vpn_cidr
+    destination = var.edge_vpc_bastion_cidr
+    direction   = "inbound"
+  }
+  # add rule to allow traffic from PowerVS workspace
+  rules {
+    name        = "inbound-allow-powervs-workspace"
+    action      = "allow"
+    source      = var.powervs_subnet_cidr
+    destination = "0.0.0.0/0"
+    direction   = "inbound"
+  }
+  rules {
+    name        = "inbound-iaas-service-endpoints"
+    action      = "allow"
+    source      = var.iaas-service-endpoint-cidr
+    destination = "0.0.0.0/0"
+    direction   = "inbound"
+  }
+  rules {
+    name        = "inbound-deny-all"
+    action      = "deny"
+    source      = "0.0.0.0/0"
+    destination = var.edge_vpc_bastion_cidr
+    direction   = "inbound"
+  }
+  rules {
+    name        = "oubbound-allow-all-vpn-traffic"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination = var.edge_vpc_public_cidr
+    direction   = "outbound"
+  }
+  rules {
+    name        = "outbound-allow-bastion-to-vpn"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination = var.edge_vpc_vpn_cidr
+    direction   = "outbound"
+  }
+  rules {
+    name        = "outbound-allow-bastion-to-any"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination = "0.0.0.0/0"
+    direction   = "outbound"
+      tcp {
+        source_port_min = 443
+        source_port_max = 443
+      }
+  }
+  # add rule to allow traffic from PowerVS workspace
+  rules {
+    name        = "outbound-allow-powervs-workspace"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination =  var.powervs_subnet_cidr
+    direction   = "outbound"
+  }
+  rules {
+    name        = "outbound-allow-iaas-service-endpoints"
+    action      = "allow"
+    source      = var.edge_vpc_bastion_cidr
+    destination = var.iaas-service-endpoint-cidr
+    direction   = "outbound"
+  }
+  rules {
+    name        = "outbound-deny-all"
+    action      = "deny"
+    source      = var.edge_vpc_bastion_cidr
+    destination = "0.0.0.0/0"
+    direction   = "outbound"
+  }
 }
 
 
@@ -452,7 +406,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  inbound   | ICMP      | 10.10.10.0/24   | 0.0.0.0/0 [Type:8, Code:Any]
 ##  inbound   | ALL       | 10.50.0.0/25    | 0.0.0.0/0
 ##  inbound   | ALL       | 161.26.0.0/16    | 0.0.0.0/0
-##  (inbound) | ALL       | 10.80.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
+##  (inbound) | ALL       | 10.60.0.128/25  | 0.0.0.0/0 for connecting to another VPC or PowerVS workspace
 
 ##
 ##  Direction | Protocol  | Source          | Destination
@@ -461,7 +415,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 ##  egress    | ICMP      | 0.0.0.0/0       | 10.50.0.0/24 [Type:8, Code:Any]
 ##  egress    | ALL       | 0.0.0.0/0       | 10.50.0.0/25
 ##  egress    | ALL       | 0.0.0.0/0       | 161.26.0.0/16
-##  (egress)  | ALL       | 0.0.0.0/0       | 10.80.0.128/25  for connecting to another VPC or PowerVS workspace
+##  (egress)  | ALL       | 0.0.0.0/0       | 10.60.0.128/25  for connecting to another VPC or PowerVS workspace
 ###############################################################################
 resource "ibm_is_security_group" "bastion_server_sg" {
   name = "bastion-server-sg"
@@ -804,22 +758,6 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_cos" {
   resource_group = ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.cos_sg.id,ibm_is_security_group.bastion_server_sg.id]
 }
-
-#NTP  (https://private.accounts.cloud.ibm.com)
-#resource "ibm_is_virtual_endpoint_gateway" "vpe_ntp" {
-#  name = "ntp-vpe"
-#  target {
-#    name           = "ibm-ntp-server"
-#    resource_type = "provider_cloud_service"
-#  }
-#  ips {
-#    subnet        = ibm_is_subnet.bastion_subnet.id
-#    name          = "ntp-vpe-ip"
-#  }
-#  vpc            = ibm_is_vpc.edge_vpc.id
-#  resource_group = ibm_resource_group.resource_group.id
-#  security_groups = [ibm_is_security_group.bastion_server_sg.id]
-#}
 
 #Account Management: Endpoint URL (https://private.accounts.cloud.ibm.com)
 resource "ibm_is_virtual_endpoint_gateway" "vpe_account_management" {
