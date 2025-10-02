@@ -592,6 +592,7 @@ resource "ibm_is_vpn_server_route" "vpn_server_route" {
   destination   = var.edge_vpc_bastion_cidr
   action        = "deliver"
   name          = "deliver-bastion-host"
+  depends_on = [ibm_iam_authorization_policy.client_vpn_to_secrets_manager_auth]
 }
 
 
