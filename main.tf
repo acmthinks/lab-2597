@@ -12,7 +12,7 @@
 ##
 ## Creates a resource group
 ###############################################################################
-resource "ibm_resource_group" "resource_group" {
+data "ibm_resource_group" "resource_group" {
    name   = var.resource_group
 }
 
