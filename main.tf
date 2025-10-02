@@ -32,7 +32,7 @@ resource ibm_pi_workspace "powervs_workspace" {
   pi_name          = join("-", [var.prefix, "power-workspace"])
 
   pi_datacenter    = var.region
-  pi_resource_group_id  = ibm_resource_group.resource_group.id
+  pi_resource_group_id  = data.ibm_resource_group.resource_group.id
 }
 
 # Create SSH Key object in PowerVS workspace, based on the ssh public key
@@ -98,7 +98,7 @@ resource "ibm_pi_instance" "powervs_instance" {
 ###############################################################################
 resource "ibm_is_vpc" "edge_vpc" {
   name = join("-", [var.prefix, "edge-vpc"])
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   address_prefix_management = "manual"
   default_routing_table_name = join("-", [var.prefix, "edge-vpc", "rt", "default"])
   default_security_group_name = join("-", [var.prefix, "edge-vpc", "sg", "default"])
@@ -128,7 +128,7 @@ resource "ibm_is_subnet" "vpn_server_subnet" {
   name            = "vpn-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -144,7 +144,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
   name            = "bastion-server-subnet"
   vpc             = ibm_is_vpc.edge_vpc.id
   zone            = var.zone
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 ###############################################################################
@@ -163,7 +163,7 @@ resource "ibm_is_subnet" "bastion_subnet" {
 resource "ibm_is_network_acl" "vpn_server_subnet_acl" {
   name = "vpn-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-allow-same-subnet-ssh"
     action      = "allow"
@@ -248,7 +248,7 @@ resource "ibm_is_subnet_network_acl_attachment" "vpn_server_subnet_acl_attachmen
 resource "ibm_is_network_acl" "bastion_server_subnet_acl" {
   name = "bastion-server-subnet-acl"
   vpc  = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   rules {
     name        = "inbound-allow-vpn-traffic"
     action      = "allow"
@@ -359,7 +359,7 @@ resource "ibm_is_subnet_network_acl_attachment" "bastion_server_subnet_acl_attac
 resource "ibm_is_security_group" "vpn_server_sg" {
   name = "vpn-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "vpn_server_rule_1" {
@@ -419,7 +419,7 @@ resource "ibm_is_security_group_rule" "vpn_server_rule_4" {
 resource "ibm_is_security_group" "bastion_server_sg" {
   name = "bastion-server-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "bastion_server_rule_1" {
@@ -514,7 +514,7 @@ resource "ibm_resource_instance" "secrets_manager" {
   service = "secrets-manager"
   plan = "standard"
   location = "us-south"
-  resource_group_id = ibm_resource_group.resource_group.id
+  resource_group_id = data.ibm_resource_group.resource_group.id
 
   parameters = {
     "allowed_network" = "public-and-private"
@@ -581,7 +581,7 @@ resource "ibm_is_vpn_server" "vpn_server" {
   port                   = 443
   protocol               = "udp"
   subnets                = [ibm_is_subnet.vpn_server_subnet.id]
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.vpn_server_sg.id]
 }
 
@@ -613,7 +613,7 @@ data "ibm_is_image" "debian" {
 
 resource "ibm_is_virtual_network_interface" "bastion_server_vni" {
   name = "bastion-server-vni"
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   allow_ip_spoofing = false
   enable_infrastructure_nat = true
   auto_delete = false
@@ -640,7 +640,7 @@ resource "ibm_is_instance" "bastion_server_vsi" {
 
   vpc  = ibm_is_vpc.edge_vpc.id
   zone = var.zone
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   keys = [ibm_is_ssh_key.bastion_ssh_key.id]
 }
 
@@ -653,7 +653,7 @@ resource "ibm_tg_gateway" "vpc_powervs_tg_gw"{
   name = "transit-gateway"
   location = var.region
   global = false
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 #create Transit Gateway connections to the VPC and to the PowerVS workspace
@@ -686,7 +686,7 @@ resource "ibm_tg_connection" "powervs_connection" {
 ###############################################################################
 resource "ibm_resource_instance" "cos" {
   name              = "cos"
-  resource_group_id = ibm_resource_group.resource_group.id
+  resource_group_id = data.ibm_resource_group.resource_group.id
   service           = "cloud-object-storage"
   plan              = "standard"
   location          = "global"
@@ -719,7 +719,7 @@ resource "ibm_cos_bucket_object" "plaintext" {
 resource "ibm_is_security_group" "cos_sg" {
   name = "cos-sg"
   vpc = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 resource "ibm_is_security_group_rule" "cos_ingress_powervs_allow" {
@@ -755,7 +755,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_cos" {
     name          = "cos-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.cos_sg.id,ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -771,7 +771,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_account_management" {
     name          = "account-managememt-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -787,7 +787,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_iam" {
     name          = "iam-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -803,7 +803,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_global_catalog" {
     name          = "global-catalog-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -819,7 +819,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_global_search" {
     name          = "global-search-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -835,7 +835,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_tagging" {
     name          = "tagging-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -851,7 +851,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_billing" {
     name          = "billing-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 
@@ -867,7 +867,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_enterprise_mgmt" {
     name          = "enterprise-mgmt-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 #Resource Controller: Endpoint URL
@@ -882,7 +882,7 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_resource_controller" {
     name          = "resource-controller-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
 #User Management: Endpoint URL
@@ -897,6 +897,6 @@ resource "ibm_is_virtual_endpoint_gateway" "vpe_user_mgmt" {
     name          = "user-management-vpe-ip"
   }
   vpc            = ibm_is_vpc.edge_vpc.id
-  resource_group = ibm_resource_group.resource_group.id
+  resource_group = data.ibm_resource_group.resource_group.id
   security_groups = [ibm_is_security_group.bastion_server_sg.id]
 }
