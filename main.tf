@@ -598,6 +598,7 @@ resource "ibm_is_ssh_key" "bastion_ssh_key" {
   name       = "andrea-ssh-public-key"
   public_key = "${var.public_ssh_key}"
   type = "rsa"
+  resource_group = data.ibm_resource_group.resource_group.id
 }
 
 # get catalog image
