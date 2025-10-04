@@ -694,7 +694,7 @@ resource "ibm_resource_instance" "cos" {
 }
 
 resource "ibm_cos_bucket" "cos_bucket" {
-  bucket_name          = "lil-bucket"
+  bucket_name          = join("-", ["lil-bucket",var.student_id])
   resource_instance_id = ibm_resource_instance.cos.id
   region_location = var.region
   storage_class        = "smart"
