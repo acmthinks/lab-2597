@@ -7,6 +7,11 @@ variable "prefix" {
   description = "The string that needs to be attached to every resource created"
 }
 
+variable "student_id" {
+  type = string
+  description = "Enter your student id [1-30]"
+}
+
 variable "resource_group" {
   type        = string
   default     = "lab-2597"
